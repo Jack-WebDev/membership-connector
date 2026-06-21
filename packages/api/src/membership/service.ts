@@ -1,10 +1,13 @@
 import { db } from "@membership-connector-app/db";
+import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import {
 	memberships,
 	membershipTiers,
 	savedMemberships,
 } from "@membership-connector-app/db/schema/membership";
-import { and, eq } from "drizzle-orm";
+import type { DbExecutor } from "@membership-connector-app/db/types";
+import { TRPCError } from "@trpc/server";
+import { and, eq, ne } from "drizzle-orm";
 
 import {
 	type ActiveTier,
@@ -14,9 +17,15 @@ import {
 	membershipMatchesSearch,
 } from "./eligibility";
 import type {
+	AdminMembershipDetail,
+	AdminMembershipStats,
+	AdminMembershipSummary,
+	CreateMembershipInput,
+	ListAdminMembershipsInput,
 	ListPublicMembershipsInput,
 	PublicMembershipDetail,
 	PublicMembershipSummary,
+	UpdateMembershipInput,
 } from "./types";
 
 export {
@@ -247,3 +256,296 @@ export async function isMembershipSavedByUser(
 
 	return existing != null;
 }
+
+const MEMBERSHIP_STATUS_TRANSITIONS: Record<string, string[]> = {
+	draft: ["published", "archived"],
+	published: ["paused", "archived"],
+	paused: ["published", "archived"],
+	archived: [],
+};
+
+function toAdminTier(
+	tier: typeof membershipTiers.$inferSelect,
+): AdminMembershipDetail["tiers"][number] {
+	return {
+		id: tier.id,
+		name: tier.name,
+		description: tier.description,
+		price: tier.price,
+		currency: tier.currency,
+		billingInterval: tier.billingInterval,
+		benefits: tier.benefits,
+		requirements: tier.requirements,
+		maxMembers: tier.maxMembers,
+		status: tier.status,
+		sortOrder: tier.sortOrder,
+	};
+}
+
+async function findOrganizationMembershipOrThrow(
+	executor: DbExecutor,
+	organizationId: string,
+	membershipId: string,
+) {
+	const membership = await executor.query.memberships.findFirst({
+		where: and(
+			eq(memberships.id, membershipId),
+			eq(memberships.organizationId, organizationId),
+		),
+	});
+
+	if (!membership) {
+		throw new TRPCError({
+			code: "NOT_FOUND",
+			message: "Membership not found",
+		});
+	}
+
+	return membership;
+}
+
+async function ensureMembershipSlugAvailable(
+	executor: DbExecutor,
+	organizationId: string,
+	slug: string,
+	excludeMembershipId?: string,
+) {
+	const existing = await executor.query.memberships.findFirst({
+		where: and(
+			eq(memberships.organizationId, organizationId),
+			eq(memberships.slug, slug),
+			...(excludeMembershipId ? [ne(memberships.id, excludeMembershipId)] : []),
+		),
+	});
+
+	if (existing) {
+		throw new TRPCError({
+			code: "CONFLICT",
+			message:
+				"A membership with that slug already exists in this organization",
+		});
+	}
+}
+
+export async function createMembership(
+	organizationId: string,
+	userId: string,
+	input: CreateMembershipInput,
+): Promise<{ membershipId: string }> {
+	const membershipId = crypto.randomUUID();
+
+	await db.transaction(async (tx) => {
+		await ensureMembershipSlugAvailable(tx, organizationId, input.slug);
+
+		await tx.insert(memberships).values({
+			id: membershipId,
+			organizationId,
+			name: input.name,
+			slug: input.slug,
+			category: input.category ? input.category : null,
+			shortDescription: input.shortDescription ? input.shortDescription : null,
+			description: input.description ? input.description : null,
+			status: "draft",
+			visibility: input.visibility,
+			applicationRequired: input.applicationRequired,
+			publicAnnouncementsEnabled: input.publicAnnouncementsEnabled,
+			membersOnlyContentEnabled: input.membersOnlyContentEnabled,
+		});
+
+		await tx.insert(auditLogs).values({
+			id: crypto.randomUUID(),
+			organizationId,
+			actorUserId: userId,
+			action: "membership.created",
+			entityType: "membership",
+			entityId: membershipId,
+			metadata: { name: input.name, slug: input.slug },
+		});
+	});
+
+	return { membershipId };
+}
+
+export async function updateMembership(
+	organizationId: string,
+	userId: string,
+	input: UpdateMembershipInput,
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const membership = await findOrganizationMembershipOrThrow(
+			tx,
+			organizationId,
+			input.membershipId,
+		);
+
+		if (membership.slug !== input.slug) {
+			await ensureMembershipSlugAvailable(
+				tx,
+				organizationId,
+				input.slug,
+				input.membershipId,
+			);
+		}
+
+		await tx
+			.update(memberships)
+			.set({
+				name: input.name,
+				slug: input.slug,
+				category: input.category ? input.category : null,
+				shortDescription: input.shortDescription
+					? input.shortDescription
+					: null,
+				description: input.description ? input.description : null,
+				visibility: input.visibility,
+				applicationRequired: input.applicationRequired,
+				publicAnnouncementsEnabled: input.publicAnnouncementsEnabled,
+				membersOnlyContentEnabled: input.membersOnlyContentEnabled,
+			})
+			.where(eq(memberships.id, input.membershipId));
+
+		await tx.insert(auditLogs).values({
+			id: crypto.randomUUID(),
+			organizationId,
+			actorUserId: userId,
+			action: "membership.updated",
+			entityType: "membership",
+			entityId: input.membershipId,
+			metadata: { name: input.name, slug: input.slug },
+		});
+	});
+}
+
+export async function transitionMembershipStatus(
+	organizationId: string,
+	userId: string,
+	membershipId: string,
+	target: "published" | "paused" | "archived",
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const membership = await findOrganizationMembershipOrThrow(
+			tx,
+			organizationId,
+			membershipId,
+		);
+
+		const allowedTargets =
+			MEMBERSHIP_STATUS_TRANSITIONS[membership.status] ?? [];
+
+		if (!allowedTargets.includes(target)) {
+			throw new TRPCError({
+				code: "BAD_REQUEST",
+				message: `Cannot move a membership from "${membership.status}" to "${target}"`,
+			});
+		}
+
+		await tx
+			.update(memberships)
+			.set({ status: target })
+			.where(eq(memberships.id, membershipId));
+
+		await tx.insert(auditLogs).values({
+			id: crypto.randomUUID(),
+			organizationId,
+			actorUserId: userId,
+			action: `membership.${target}`,
+			entityType: "membership",
+			entityId: membershipId,
+			metadata: { from: membership.status, to: target },
+		});
+	});
+}
+
+export async function listAdminMemberships(
+	organizationId: string,
+	input: ListAdminMembershipsInput,
+): Promise<{ items: AdminMembershipSummary[]; total: number }> {
+	const rows = await db.query.memberships.findMany({
+		where: eq(memberships.organizationId, organizationId),
+		with: { tiers: true },
+	});
+
+	const filtered = rows
+		.filter((row) => !input.status || row.status === input.status)
+		.filter((row) => !input.visibility || row.visibility === input.visibility)
+		.filter((row) => membershipMatchesSearch(row, "", input.search))
+		.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+
+	const total = filtered.length;
+	const start = (input.page - 1) * input.pageSize;
+	const page = filtered.slice(start, start + input.pageSize);
+
+	return {
+		items: page.map((row) => ({
+			id: row.id,
+			name: row.name,
+			slug: row.slug,
+			category: row.category,
+			shortDescription: row.shortDescription,
+			status: row.status,
+			visibility: row.visibility,
+			tierCount: row.tiers.length,
+			updatedAt: row.updatedAt,
+		})),
+		total,
+	};
+}
+
+export async function getAdminMembershipStats(
+	organizationId: string,
+): Promise<AdminMembershipStats> {
+	const rows = await db.query.memberships.findMany({
+		where: eq(memberships.organizationId, organizationId),
+		columns: { status: true },
+	});
+
+	const stats: AdminMembershipStats = {
+		draft: 0,
+		published: 0,
+		paused: 0,
+		archived: 0,
+		total: rows.length,
+	};
+
+	for (const row of rows) {
+		stats[row.status] += 1;
+	}
+
+	return stats;
+}
+
+export async function getAdminMembershipById(
+	organizationId: string,
+	membershipId: string,
+): Promise<AdminMembershipDetail> {
+	const membership = await findOrganizationMembershipOrThrow(
+		db,
+		organizationId,
+		membershipId,
+	);
+
+	const tiers = await db.query.membershipTiers.findMany({
+		where: eq(membershipTiers.membershipId, membershipId),
+		orderBy: (table, { asc }) => asc(table.sortOrder),
+	});
+
+	return {
+		id: membership.id,
+		organizationId: membership.organizationId,
+		name: membership.name,
+		slug: membership.slug,
+		category: membership.category,
+		shortDescription: membership.shortDescription,
+		description: membership.description,
+		status: membership.status,
+		visibility: membership.visibility,
+		applicationRequired: membership.applicationRequired,
+		publicAnnouncementsEnabled: membership.publicAnnouncementsEnabled,
+		membersOnlyContentEnabled: membership.membersOnlyContentEnabled,
+		createdAt: membership.createdAt,
+		updatedAt: membership.updatedAt,
+		tiers: tiers.map(toAdminTier),
+	};
+}
+
+export { ensureMembershipSlugAvailable, findOrganizationMembershipOrThrow };

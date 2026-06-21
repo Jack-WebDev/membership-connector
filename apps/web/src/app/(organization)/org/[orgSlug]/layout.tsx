@@ -22,7 +22,7 @@ export default async function OrganizationLayout({
 		<AppShell
 			title={organizationAccess.name}
 			subtitle={organizationAccess.role}
-			items={organizationNavItems(orgSlug)}
+			items={organizationNavItems(orgSlug, organizationAccess.role)}
 			defaultOpen={defaultOpen}
 		>
 			{children}

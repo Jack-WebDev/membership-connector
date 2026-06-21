@@ -1,3 +1,5 @@
+import type { OrganizationAdminRole } from "@membership-connector-app/api/account-access";
+import { hasOrganizationPermission } from "@membership-connector-app/api/permissions/permissions";
 import type { NavigationItem } from "@membership-connector-app/ui/lib/app-types";
 import {
 	BadgeCheckIcon,
@@ -62,7 +64,10 @@ export const memberNavItems = (basePath = "/member"): NavigationItem[] => [
 	},
 ];
 
-export const organizationNavItems = (orgSlug: string): NavigationItem[] => {
+export const organizationNavItems = (
+	orgSlug: string,
+	role: OrganizationAdminRole,
+): NavigationItem[] => {
 	const basePath = `/org/${orgSlug}`;
 
 	return [
@@ -76,16 +81,24 @@ export const organizationNavItems = (orgSlug: string): NavigationItem[] => {
 			href: `${basePath}/applications`,
 			icon: <FileTextIcon className="size-4" />,
 		},
-		{
-			label: "Memberships",
-			href: `${basePath}/memberships`,
-			icon: <BriefcaseBusinessIcon className="size-4" />,
-		},
-		{
-			label: "Membership Tiers",
-			href: `${basePath}/membership-tiers`,
-			icon: <BadgeCheckIcon className="size-4" />,
-		},
+		...(hasOrganizationPermission(role, "manage_memberships")
+			? [
+					{
+						label: "Memberships",
+						href: `${basePath}/memberships`,
+						icon: <BriefcaseBusinessIcon className="size-4" />,
+					},
+				]
+			: []),
+		...(hasOrganizationPermission(role, "manage_tiers")
+			? [
+					{
+						label: "Membership Tiers",
+						href: `${basePath}/membership-tiers`,
+						icon: <BadgeCheckIcon className="size-4" />,
+					},
+				]
+			: []),
 		{
 			label: "Members",
 			href: `${basePath}/members`,
