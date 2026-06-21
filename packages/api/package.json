@@ -1,27 +1,27 @@
 {
-  "name": "@membership-connector-app/api",
-  "type": "module",
-  "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
-    }
-  },
-  "scripts": {},
-  "dependencies": {
-    "@membership-connector-app/auth": "workspace:*",
-    "@membership-connector-app/db": "workspace:*",
-    "@membership-connector-app/env": "workspace:*",
-    "@trpc/client": "catalog:",
-    "@trpc/server": "catalog:",
-    "better-auth": "catalog:",
-    "dotenv": "catalog:",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "@membership-connector-app/config": "workspace:*",
-    "typescript": "catalog:"
-  }
+	"name": "@membership-connector-app/api",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {},
+	"dependencies": {
+		"@membership-connector-app/auth": "workspace:*",
+		"@membership-connector-app/db": "workspace:*",
+		"@membership-connector-app/env": "workspace:*",
+		"@trpc/client": "catalog:",
+		"@trpc/server": "catalog:",
+		"better-auth": "catalog:",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@membership-connector-app/config": "workspace:*",
+		"typescript": "catalog:"
+	}
 }

@@ -1,24 +1,24 @@
 {
-  "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "base-lyra",
-  "rsc": true,
-  "tsx": true,
-  "tailwind": {
-    "config": "",
-    "css": "src/styles/globals.css",
-    "baseColor": "neutral",
-    "cssVariables": true,
-    "prefix": ""
-  },
-  "iconLibrary": "lucide",
-  "aliases": {
-    "components": "@membership-connector-app/ui/components",
-    "utils": "@membership-connector-app/ui/lib/utils",
-    "hooks": "@membership-connector-app/ui/hooks",
-    "lib": "@membership-connector-app/ui/lib",
-    "ui": "@membership-connector-app/ui/components"
-  },
-  "menuColor": "default",
-  "menuAccent": "subtle",
-  "registries": {}
+	"$schema": "https://ui.shadcn.com/schema.json",
+	"style": "base-lyra",
+	"rsc": true,
+	"tsx": true,
+	"tailwind": {
+		"config": "",
+		"css": "src/styles/globals.css",
+		"baseColor": "neutral",
+		"cssVariables": true,
+		"prefix": ""
+	},
+	"iconLibrary": "lucide",
+	"aliases": {
+		"components": "@membership-connector-app/ui/components",
+		"utils": "@membership-connector-app/ui/lib/utils",
+		"hooks": "@membership-connector-app/ui/hooks",
+		"lib": "@membership-connector-app/ui/lib",
+		"ui": "@membership-connector-app/ui/components"
+	},
+	"menuColor": "default",
+	"menuAccent": "subtle",
+	"registries": {}
 }

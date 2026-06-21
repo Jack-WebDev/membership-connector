@@ -1,32 +1,39 @@
 {
-  "name": "server",
-  "type": "module",
-  "main": "src/index.ts",
-  "scripts": {
-    "build": "tsdown",
-    "check-types": "tsc -b",
-    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.mjs"
-  },
-  "dependencies": {
-    "@fastify/cors": "^11.0.1",
-    "@hono/trpc-server": "^0.4.0",
-    "@membership-connector-app/api": "workspace:*",
-    "@membership-connector-app/auth": "workspace:*",
-    "@membership-connector-app/db": "workspace:*",
-    "@membership-connector-app/env": "workspace:*",
-    "@trpc/server": "catalog:",
-    "better-auth": "catalog:",
-    "dotenv": "catalog:",
-    "fastify": "^5.3.3",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "@membership-connector-app/config": "workspace:*",
-    "@types/node": "^22.13.14",
-    "tsdown": "^0.21.9",
-    "tsx": "^4.19.2",
-    "typescript": "catalog:"
-  }
+	"name": "server",
+	"type": "module",
+	"main": "src/index.ts",
+	"scripts": {
+		"build": "tsdown",
+		"check-types": "tsc -b",
+		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+		"dev": "tsx watch src/index.ts",
+		"start": "node dist/index.mjs"
+	},
+	"dependencies": {
+		"@fastify/cors": "^11.0.1",
+		"@hono/trpc-server": "^0.4.0",
+		"@membership-connector-app/api": "workspace:*",
+		"@membership-connector-app/auth": "workspace:*",
+		"@membership-connector-app/db": "workspace:*",
+		"@membership-connector-app/env": "workspace:*",
+		"@membership-connector-app/observability": "workspace:*",
+		"@trpc/server": "catalog:",
+		"better-auth": "catalog:",
+		"dotenv": "catalog:",
+		"fastify": "^5.3.3",
+		"zod": "catalog:",
+		"@fastify/circuit-breaker": "4.0.2",
+		"@fastify/compress": "8.3.1",
+		"@fastify/helmet": "13.0.2",
+		"@fastify/rate-limit": "10.3.0",
+		"pino": "^9.6.0",
+		"pino-pretty": "^13.1.1"
+	},
+	"devDependencies": {
+		"@membership-connector-app/config": "workspace:*",
+		"@types/node": "^22.13.14",
+		"tsdown": "^0.21.9",
+		"tsx": "^4.19.2",
+		"typescript": "catalog:"
+	}
 }

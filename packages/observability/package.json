@@ -1,0 +1,33 @@
+{
+	"name": "@membership-connector-app/observability",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsdown",
+		"lint": "biome check --write .",
+		"check-types": "tsc -p tsconfig.json --noEmit",
+		"clean": "rimraf dist .turbo && rm -rf node_modules"
+	},
+	"dependencies": {
+		"dotenv": "catalog:"
+	},
+	"devDependencies": {
+		"@membership-connector-app/config": "workspace:*",
+		"rimraf": "catalog:",
+		"tsdown": "catalog:",
+		"typescript": "catalog:"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.32.1"
+}

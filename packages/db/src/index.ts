@@ -1,10 +1,63 @@
 import { env } from "@membership-connector-app/env/server";
-import { drizzle } from "drizzle-orm/node-postgres";
+import { logError } from "@membership-connector-app/observability";
+import { db, originalQuery, pool, withDbInstrumentation } from "./client";
 
-import * as schema from "./schema";
+export type { DbExecutor } from "./types";
+export { db, pool };
 
-export function createDb() {
-  return drizzle(env.DATABASE_URL, { schema });
+export async function closeDb() {
+	await pool.end();
 }
 
-export const db = createDb();
+export async function checkDbHealth(timeoutMs = env.HEALTHCHECK_TIMEOUT_MS) {
+	let timeout: NodeJS.Timeout | undefined;
+
+	try {
+		const { durationMs } = await withDbInstrumentation(
+			"healthcheck",
+			async () => {
+				await Promise.race([
+					originalQuery("select 1"),
+					new Promise<never>((_, reject) => {
+						timeout = setTimeout(() => {
+							reject(
+								new Error(
+									`Database health check timed out after ${timeoutMs}ms`,
+								),
+							);
+						}, timeoutMs);
+					}),
+				]);
+			},
+		);
+
+		return {
+			status: "ok" as const,
+			durationMs,
+		};
+	} catch (wrapped) {
+		const { err, durationMs, errorCode } = wrapped as {
+			err: unknown;
+			durationMs: number;
+			errorCode: string;
+		};
+
+		logError("db.healthcheck.failed", {
+			err,
+			dependency: "postgres",
+			durationMs,
+			errorCode,
+		});
+
+		return {
+			status: "fail" as const,
+			durationMs,
+			message:
+				err instanceof Error ? err.message : "Database health check failed",
+		};
+	} finally {
+		if (timeout) {
+			clearTimeout(timeout);
+		}
+	}
+}
