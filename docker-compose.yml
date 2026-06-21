@@ -1,0 +1,23 @@
+name: membership-connector
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: membership-connector-postgres
+    restart: unless-stopped
+    ports:
+      - "5437:5432"
+    environment:
+      POSTGRES_USER: membership
+      POSTGRES_PASSWORD: membership
+      POSTGRES_DB: membership_connector
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U membership -d membership_connector"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
