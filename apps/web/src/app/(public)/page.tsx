@@ -1,9 +1,18 @@
 import { Button } from "@membership-connector-app/ui/components/button";
+import { EmptyState } from "@membership-connector-app/ui/components/empty-state";
 import { MembershipCard } from "@membership-connector-app/ui/components/membership-card";
 import { OrganizationCard } from "@membership-connector-app/ui/components/organization-card";
 import { PageHeader } from "@membership-connector-app/ui/components/page-header";
 import { SectionHeader } from "@membership-connector-app/ui/components/section-header";
 import Link from "next/link";
+
+import {
+	toMembershipCardProps,
+	toOrganizationCardProps,
+} from "@/lib/membership-presenters";
+import { serverTrpc } from "@/utils/trpc-server";
+
+const FEATURED_COUNT = 2;
 
 const steps = [
 	{
@@ -26,53 +35,15 @@ const steps = [
 	},
 ];
 
-const memberships = [
-	{
-		name: "Startup Founder Circle",
-		organizationName: "LulaFi Business Network",
-		shortDescription:
-			"Meet other business owners, get introductions, and join free monthly meetups.",
-		category: "Business",
-		startingPrice: "R0",
-		billingInterval: "free to join",
-		activeTiers: 3,
-		status: "Published",
-	},
-	{
-		name: "Creative Partner Access",
-		organizationName: "Creative Professionals Association",
-		shortDescription:
-			"A friendly group for designers and freelancers to find work and get feedback.",
-		category: "Creative",
-		startingPrice: "R390",
-		billingInterval: "per month",
-		activeTiers: 2,
-		status: "Published",
-	},
-];
+export default async function HomePage() {
+	const [memberships, organizations] = await Promise.all([
+		serverTrpc.membership.listPublic.query({ sort: "newest" }),
+		serverTrpc.organization.listPublic.query({}),
+	]);
 
-const organizations = [
-	{
-		name: "LulaFi Business Network",
-		description:
-			"A community for business owners who want practical advice and real introductions.",
-		membershipCount: 3,
-		category: "Featured group",
-		location: "Johannesburg",
-		highlight: "Members say the small group meetups are the most useful part.",
-	},
-	{
-		name: "Wellness Members Club",
-		description:
-			"Classes, wellness tips, and a coach who checks in on your progress.",
-		membershipCount: 2,
-		category: "Featured group",
-		location: "Cape Town",
-		highlight: "A warm, welcoming club with clear pricing and no surprises.",
-	},
-];
+	const featuredMemberships = memberships.slice(0, FEATURED_COUNT);
+	const featuredOrganizations = organizations.slice(0, FEATURED_COUNT);
 
-export default function HomePage() {
 	return (
 		<div className="space-y-14 pb-10">
 			<PageHeader
@@ -127,11 +98,23 @@ export default function HomePage() {
 					title="Communities you can join today"
 					description="A few of the groups already welcoming new members."
 				/>
-				<div className="grid gap-6 md:grid-cols-2">
-					{organizations.map((organization) => (
-						<OrganizationCard key={organization.name} {...organization} />
-					))}
-				</div>
+				{featuredOrganizations.length > 0 ? (
+					<div className="grid gap-6 md:grid-cols-2">
+						{featuredOrganizations.map((organization) => (
+							<OrganizationCard
+								key={organization.id}
+								{...toOrganizationCardProps(organization, {
+									href: `/organizations/${organization.slug}`,
+								})}
+							/>
+						))}
+					</div>
+				) : (
+					<EmptyState
+						title="No groups yet"
+						description="Organizations will appear here once they publish a membership."
+					/>
+				)}
 			</section>
 
 			<section className="fade-in slide-in-from-bottom-4 animate-in space-y-6 fill-mode-both delay-200 duration-700">
@@ -140,11 +123,23 @@ export default function HomePage() {
 					title="Popular memberships to get you started"
 					description="Each membership shows you the price and what's included before you join."
 				/>
-				<div className="grid gap-6 lg:grid-cols-2">
-					{memberships.map((membership) => (
-						<MembershipCard key={membership.name} {...membership} />
-					))}
-				</div>
+				{featuredMemberships.length > 0 ? (
+					<div className="grid gap-6 lg:grid-cols-2">
+						{featuredMemberships.map((membership) => (
+							<MembershipCard
+								key={membership.id}
+								{...toMembershipCardProps(membership, {
+									href: `/organizations/${membership.organizationSlug}/memberships/${membership.slug}`,
+								})}
+							/>
+						))}
+					</div>
+				) : (
+					<EmptyState
+						title="No memberships yet"
+						description="Published memberships will show up here as soon as they're live."
+					/>
+				)}
 			</section>
 
 			<section className="fade-in slide-in-from-bottom-4 animate-in rounded-[calc(var(--radius)*1.25)] border border-border/80 bg-card/90 fill-mode-both p-8 text-center shadow-[var(--shadow-soft)] delay-300 duration-700 sm:p-10">

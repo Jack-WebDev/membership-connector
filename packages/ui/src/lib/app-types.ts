@@ -34,16 +34,18 @@ export type MembershipCardProps = {
 	status?: string;
 	ctaLabel?: string;
 	metaLabel?: string;
+	href?: string;
 };
 
 export type OrganizationCardProps = {
 	name: string;
 	description: string;
 	membershipCount: number;
-	category: string;
+	category?: string;
 	location?: string;
 	highlight?: string;
 	ctaLabel?: string;
+	href?: string;
 };
 
 export type TierPricingCardProps = {

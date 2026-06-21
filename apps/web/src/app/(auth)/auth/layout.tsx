@@ -49,9 +49,9 @@ export default function AuthLayout({
 					</span>
 				</Link>
 
-				<div className="relative z-10 max-w-md space-y-8">
+				<div className="relative z-10 max-w-xl space-y-8">
 					<h1 className="font-(family-name:--font-display) text-4xl leading-tight sm:text-5xl">
-						Manage every membership in one modern workspace.
+						Manage every membership in one workspace.
 					</h1>
 					<div className="space-y-5">
 						{highlights.map((item) => (

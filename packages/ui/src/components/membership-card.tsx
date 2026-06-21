@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/a11y/useAnchorContent: biome-ignore lint: false positive, Base UI's render clones the Button's children into the anchor */
 import { Button } from "@membership-connector-app/ui/components/button";
 import { StatusBadge } from "@membership-connector-app/ui/components/status-badge";
 import type { MembershipCardProps } from "@membership-connector-app/ui/lib/app-types";
@@ -16,6 +17,7 @@ function MembershipCard({
 	status,
 	ctaLabel = "View membership",
 	metaLabel = "Available tiers",
+	href,
 }: MembershipCardProps & { className?: string }) {
 	return (
 		<article
@@ -63,7 +65,10 @@ function MembershipCard({
 					</div>
 				</div>
 			</div>
-			<Button className="w-full justify-between">
+			<Button
+				className="w-full justify-between"
+				render={href ? <a href={href} /> : undefined}
+			>
 				{ctaLabel}
 				<ArrowUpRightIcon className="transition-transform duration-300 group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5" />
 			</Button>

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/a11y/useAnchorContent: biome-ignore lint: false positive, Base UI's render clones the Button's children into the anchor */
 import { Button } from "@membership-connector-app/ui/components/button";
 import type { OrganizationCardProps } from "@membership-connector-app/ui/lib/app-types";
 import { cn } from "@membership-connector-app/ui/lib/utils";
@@ -12,6 +13,7 @@ function OrganizationCard({
 	location,
 	highlight,
 	ctaLabel = "View organization",
+	href,
 }: OrganizationCardProps & { className?: string }) {
 	return (
 		<article
@@ -21,9 +23,11 @@ function OrganizationCard({
 			)}
 		>
 			<div className="space-y-2">
-				<div className="font-semibold text-[0.68rem] text-primary uppercase tracking-[0.2em]">
-					{category}
-				</div>
+				{category ? (
+					<div className="font-semibold text-[0.68rem] text-primary uppercase tracking-[0.2em]">
+						{category}
+					</div>
+				) : null}
 				<h3 className="font-(family-name:--font-display) text-3xl text-foreground leading-none">
 					{name}
 				</h3>
@@ -48,7 +52,11 @@ function OrganizationCard({
 					{highlight}
 				</div>
 			) : null}
-			<Button variant="outline" className="w-full justify-between">
+			<Button
+				variant="outline"
+				className="w-full justify-between"
+				render={href ? <a href={href} /> : undefined}
+			>
 				{ctaLabel}
 				<ArrowUpRightIcon className="transition-transform duration-300 group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5" />
 			</Button>

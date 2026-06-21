@@ -99,6 +99,23 @@ export async function requireSession(loginRedirectTo: string) {
 	return summary.session;
 }
 
+export async function getAuthState(): Promise<
+	| { authenticated: false }
+	| { authenticated: true; userId: string; roles: AccountRole[] }
+> {
+	const summary = await getSessionSummary();
+
+	if (!summary.authenticated) {
+		return { authenticated: false };
+	}
+
+	return {
+		authenticated: true,
+		userId: summary.session.user.id,
+		roles: summary.roles,
+	};
+}
+
 export async function getAccountRoles(userId?: string): Promise<AccountRole[]> {
 	const summary = await getSessionSummary();
 
