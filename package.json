@@ -1,0 +1,46 @@
+{
+  "name": "membership-connector-app",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:web": "turbo -F web dev",
+    "dev:server": "turbo -F server dev",
+    "db:push": "turbo -F @membership-connector-app/db db:push",
+    "db:studio": "turbo -F @membership-connector-app/db db:studio",
+    "db:generate": "turbo -F @membership-connector-app/db db:generate",
+    "db:migrate": "turbo -F @membership-connector-app/db db:migrate",
+    "db:start": "turbo -F @membership-connector-app/db db:start",
+    "db:watch": "turbo -F @membership-connector-app/db db:watch",
+    "db:stop": "turbo -F @membership-connector-app/db db:stop",
+    "db:down": "turbo -F @membership-connector-app/db db:down",
+    "check": "biome check --write .",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@membership-connector-app/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "@membership-connector-app/config": "workspace:*",
+    "@types/node": "^22.13.14",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
+    "turbo": "^2.9.16",
+    "typescript": "catalog:"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --write ."
+    ]
+  },
+  "packageManager": "pnpm@10.32.1"
+}
