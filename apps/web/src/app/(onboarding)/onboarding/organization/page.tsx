@@ -1,35 +1,31 @@
 import { FormSection } from "@membership-connector-app/ui/components/form-section";
-import { Input } from "@membership-connector-app/ui/components/input";
-import { Label } from "@membership-connector-app/ui/components/label";
+import { redirect } from "next/navigation";
 
-export default function OnboardingOrganizationPage() {
+import { OrganizationOnboardingForm } from "@/components/onboarding/organization-onboarding-form";
+import {
+	getAccountRoles,
+	getAuthenticatedRedirectPath,
+	requireSession,
+} from "@/lib/server-auth";
+
+export default async function OnboardingOrganizationPage() {
+	const session = await requireSession("/onboarding/account-type");
+	const roles = await getAccountRoles(session.user.id);
+
+	if (roles.includes("organization")) {
+		const redirectPath = await getAuthenticatedRedirectPath(session.user.id);
+
+		if (redirectPath !== "/onboarding/organization") {
+			redirect(redirectPath);
+		}
+	}
+
 	return (
 		<FormSection
-			title="Organization setup placeholder"
-			description="This shell reserves the exact onboarding route and visual structure for organization creation without implementing transactions yet."
+			title="Set up your organization"
+			description="This becomes your organization's public profile and admin workspace."
 		>
-			<div className="grid gap-4 sm:grid-cols-2">
-				<div className="space-y-2 sm:col-span-2">
-					<Label>Organization name</Label>
-					<Input placeholder="LulaFi Business Network" />
-				</div>
-				<div className="space-y-2">
-					<Label>Slug</Label>
-					<Input placeholder="lulafi-business-network" />
-				</div>
-				<div className="space-y-2">
-					<Label>Contact email</Label>
-					<Input placeholder="hello@lulafi.example" />
-				</div>
-				<div className="space-y-2">
-					<Label>Phone</Label>
-					<Input placeholder="+27 11 000 0000" />
-				</div>
-				<div className="space-y-2">
-					<Label>Website</Label>
-					<Input placeholder="https://example.com" />
-				</div>
-			</div>
+			<OrganizationOnboardingForm />
 		</FormSection>
 	);
 }
