@@ -9,7 +9,9 @@
 			"default": "./src/*.ts"
 		}
 	},
-	"scripts": {},
+	"scripts": {
+		"test": "vitest run"
+	},
 	"dependencies": {
 		"@membership-connector-app/auth": "workspace:*",
 		"@membership-connector-app/db": "workspace:*",
@@ -17,12 +19,13 @@
 		"@trpc/client": "catalog:",
 		"@trpc/server": "catalog:",
 		"better-auth": "catalog:",
-		"drizzle-orm": "^0.45.1",
 		"dotenv": "catalog:",
+		"drizzle-orm": "^0.45.1",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@membership-connector-app/config": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vitest": "^4.1.9"
 	}
 }
