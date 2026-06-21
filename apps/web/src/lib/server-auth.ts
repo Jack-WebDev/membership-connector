@@ -25,6 +25,7 @@ type SessionSummary =
 			organizationAccess: {
 				organizationId: string;
 				slug: string;
+				name: string;
 				role:
 					| "owner"
 					| "admin"

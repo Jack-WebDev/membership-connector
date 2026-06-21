@@ -1,4 +1,5 @@
-import DashboardLayoutShell from "@/components/dashboard-layout-shell";
+import { cookies } from "next/headers";
+import AppShell from "@/components/app-shell";
 import { organizationNavItems } from "@/components/nav-items";
 import { requireOrganizationSession } from "@/lib/server-auth";
 
@@ -10,16 +11,21 @@ export default async function OrganizationLayout({
 	params: Promise<{ orgSlug: string }>;
 }) {
 	const { orgSlug } = await params;
-	await requireOrganizationSession(orgSlug, `/org/${orgSlug}/dashboard`);
+	const { organizationAccess } = await requireOrganizationSession(
+		orgSlug,
+		`/org/${orgSlug}/dashboard`,
+	);
+	const cookieStore = await cookies();
+	const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
 	return (
-		<DashboardLayoutShell
-			title="Organization area"
-			subtitle={`Scaffolded org shell for ${orgSlug.replaceAll("-", " ")}`}
-			topline="Organization workspace shell"
+		<AppShell
+			title={organizationAccess.name}
+			subtitle={organizationAccess.role}
 			items={organizationNavItems(orgSlug)}
+			defaultOpen={defaultOpen}
 		>
 			{children}
-		</DashboardLayoutShell>
+		</AppShell>
 	);
 }

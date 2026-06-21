@@ -1,4 +1,5 @@
-import DashboardLayoutShell from "@/components/dashboard-layout-shell";
+import { cookies } from "next/headers";
+import AppShell from "@/components/app-shell";
 import { memberNavItems } from "@/components/nav-items";
 import { requireMemberSession } from "@/lib/server-auth";
 
@@ -8,15 +9,17 @@ export default async function MemberLayout({
 	children: React.ReactNode;
 }) {
 	await requireMemberSession("/member/dashboard");
+	const cookieStore = await cookies();
+	const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
 	return (
-		<DashboardLayoutShell
+		<AppShell
 			title="Member area"
-			subtitle="Scaffolded navigation for member dashboards, applications, memberships, and saved items."
-			topline="Member workspace shell"
+			subtitle="Applications, memberships, and saved items"
 			items={memberNavItems()}
+			defaultOpen={defaultOpen}
 		>
 			{children}
-		</DashboardLayoutShell>
+		</AppShell>
 	);
 }

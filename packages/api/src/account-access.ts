@@ -28,6 +28,7 @@ export async function findAuthorizedOrganizationForUser(
 		.select({
 			organizationId: organizations.id,
 			slug: organizations.slug,
+			name: organizations.name,
 			role: organizationAdmins.role,
 		})
 		.from(organizationAdmins)
