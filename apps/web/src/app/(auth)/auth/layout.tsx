@@ -19,7 +19,7 @@ const highlights = [
 		icon: CheckCircle2,
 		title: "Up and running in minutes",
 		description:
-			"No setup calls, no onboarding forms — just create an account and go.",
+			"Create an account, choose your role, and continue into the right workspace.",
 	},
 ];
 

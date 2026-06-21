@@ -1,5 +1,6 @@
 import DashboardLayoutShell from "@/components/dashboard-layout-shell";
 import { organizationNavItems } from "@/components/nav-items";
+import { requireOrganizationSession } from "@/lib/server-auth";
 
 export default async function OrganizationLayout({
 	children,
@@ -9,6 +10,7 @@ export default async function OrganizationLayout({
 	params: Promise<{ orgSlug: string }>;
 }) {
 	const { orgSlug } = await params;
+	await requireOrganizationSession(orgSlug, `/org/${orgSlug}/dashboard`);
 
 	return (
 		<DashboardLayoutShell

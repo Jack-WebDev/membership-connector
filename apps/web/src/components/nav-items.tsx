@@ -9,7 +9,6 @@ import {
 	FolderHeartIcon,
 	LayoutDashboardIcon,
 	MegaphoneIcon,
-	MembersIcon,
 	SearchIcon,
 	Settings2Icon,
 	ShieldIcon,

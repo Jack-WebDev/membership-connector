@@ -14,6 +14,13 @@ export function createAuth() {
 		trustedOrigins: [env.CORS_ORIGIN],
 		emailAndPassword: {
 			enabled: true,
+			sendResetPassword: async ({ user, token, url }) => {
+				console.info(
+					`[better-auth] Password reset requested for ${user.email}. Token: ${token}. URL: ${url}`,
+				);
+			},
+			resetPasswordTokenExpiresIn: 60 * 60,
+			revokeSessionsOnPasswordReset: true,
 		},
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL: env.BETTER_AUTH_URL,

@@ -1,5 +1,8 @@
 import SignUpForm from "@/components/sign-up-form";
+import { redirectAuthenticatedUser } from "@/lib/server-auth";
 
-export default function AuthRegisterPage() {
+export default async function AuthRegisterPage() {
+	await redirectAuthenticatedUser();
+
 	return <SignUpForm />;
 }

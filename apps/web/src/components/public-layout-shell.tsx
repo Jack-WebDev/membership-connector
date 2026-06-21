@@ -3,6 +3,7 @@
 import { Button } from "@membership-connector-app/ui/components/button";
 import { MobileNav } from "@membership-connector-app/ui/components/mobile-nav";
 import { cn } from "@membership-connector-app/ui/lib/utils";
+import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { renderNavigationLink } from "./link-renderer";
@@ -41,7 +42,7 @@ export default function PublicLayoutShell({
 						{navItems.slice(0, 3).map((item) => (
 							<Link
 								key={item.href}
-								href={item.href}
+								href={item.href as Route}
 								className={cn(
 									"rounded-full px-4 py-2 text-sm transition-colors",
 									item.active
