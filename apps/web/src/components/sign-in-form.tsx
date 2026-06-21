@@ -1,8 +1,14 @@
+"use client";
+
 import { Button } from "@membership-connector-app/ui/components/button";
+import { FormSection } from "@membership-connector-app/ui/components/form-section";
 import { Input } from "@membership-connector-app/ui/components/input";
 import { Label } from "@membership-connector-app/ui/components/label";
 import { useForm } from "@tanstack/react-form";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
 
@@ -10,13 +16,10 @@ import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
-export default function SignInForm({
-	onSwitchToSignUp,
-}: {
-	onSwitchToSignUp: () => void;
-}) {
+export default function SignInForm() {
 	const router = useRouter();
 	const { isPending } = authClient.useSession();
+	const [showPassword, setShowPassword] = useState(false);
 
 	const form = useForm({
 		defaultValues: {
@@ -31,7 +34,7 @@ export default function SignInForm({
 				},
 				{
 					onSuccess: () => {
-						router.push("/dashboard");
+						router.push("/member/dashboard");
 						toast.success("Sign in successful");
 					},
 					onError: (error) => {
@@ -53,9 +56,10 @@ export default function SignInForm({
 	}
 
 	return (
-		<div className="mx-auto mt-10 w-full max-w-md p-6">
-			<h1 className="mb-6 text-center font-bold text-3xl">Welcome Back</h1>
-
+		<FormSection
+			title="Welcome back"
+			description="Sign in to pick up right where you left off."
+		>
 			<form
 				onSubmit={(e) => {
 					e.preventDefault();
@@ -64,51 +68,71 @@ export default function SignInForm({
 				}}
 				className="space-y-4"
 			>
-				<div>
-					<form.Field name="email">
-						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Email</Label>
+				<form.Field name="email">
+					{(field) => (
+						<div className="space-y-2">
+							<Label htmlFor={field.name}>Email</Label>
+							<div className="relative">
+								<Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
 								<Input
 									id={field.name}
 									name={field.name}
 									type="email"
+									placeholder="you@example.com"
+									autoComplete="email"
+									className="pl-9"
 									value={field.state.value}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
 								/>
-								{field.state.meta.errors.map((error) => (
-									<p key={error?.message} className="text-red-500">
-										{error?.message}
-									</p>
-								))}
 							</div>
-						)}
-					</form.Field>
-				</div>
+							{field.state.meta.errors.map((error) => (
+								<p key={error?.message} className="text-destructive text-sm">
+									{error?.message}
+								</p>
+							))}
+						</div>
+					)}
+				</form.Field>
 
-				<div>
-					<form.Field name="password">
-						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Password</Label>
+				<form.Field name="password">
+					{(field) => (
+						<div className="space-y-2">
+							<Label htmlFor={field.name}>Password</Label>
+							<div className="relative">
+								<Lock className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
 								<Input
 									id={field.name}
 									name={field.name}
-									type="password"
+									type={showPassword ? "text" : "password"}
+									placeholder="••••••••"
+									autoComplete="current-password"
+									className="px-9"
 									value={field.state.value}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
 								/>
-								{field.state.meta.errors.map((error) => (
-									<p key={error?.message} className="text-red-500">
-										{error?.message}
-									</p>
-								))}
+								<button
+									type="button"
+									onClick={() => setShowPassword((value) => !value)}
+									className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+									aria-label={showPassword ? "Hide password" : "Show password"}
+								>
+									{showPassword ? (
+										<EyeOff className="size-4" />
+									) : (
+										<Eye className="size-4" />
+									)}
+								</button>
 							</div>
-						)}
-					</form.Field>
-				</div>
+							{field.state.meta.errors.map((error) => (
+								<p key={error?.message} className="text-destructive text-sm">
+									{error?.message}
+								</p>
+							))}
+						</div>
+					)}
+				</form.Field>
 
 				<form.Subscribe
 					selector={(state) => ({
@@ -119,24 +143,25 @@ export default function SignInForm({
 					{({ canSubmit, isSubmitting }) => (
 						<Button
 							type="submit"
+							size="lg"
 							className="w-full"
 							disabled={!canSubmit || isSubmitting}
 						>
-							{isSubmitting ? "Submitting..." : "Sign In"}
+							{isSubmitting ? "Signing in..." : "Sign in"}
 						</Button>
 					)}
 				</form.Subscribe>
 			</form>
 
-			<div className="mt-4 text-center">
-				<Button
-					variant="link"
-					onClick={onSwitchToSignUp}
-					className="text-indigo-600 hover:text-indigo-800"
+			<div className="pt-2 text-center text-muted-foreground text-sm">
+				Need an account?{" "}
+				<Link
+					href="/auth/register"
+					className="font-medium text-primary hover:underline"
 				>
-					Need an account? Sign Up
-				</Button>
+					Create one
+				</Link>
 			</div>
-		</div>
+		</FormSection>
 	);
 }
