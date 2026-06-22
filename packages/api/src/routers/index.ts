@@ -1,5 +1,6 @@
 import { protectedProcedure, publicProcedure, router } from "../index";
 import { membershipRouter } from "../membership/router";
+import { membershipApplicationRouter } from "../membership-application/router";
 import { membershipTierRouter } from "../membership-tier/router";
 import { onboardingRouter } from "../onboarding/router";
 import { organizationRouter } from "../organization/router";
@@ -17,6 +18,7 @@ export const appRouter = router({
 	onboarding: onboardingRouter,
 	membership: membershipRouter,
 	membershipTier: membershipTierRouter,
+	membershipApplication: membershipApplicationRouter,
 	organization: organizationRouter,
 });
 export type AppRouter = typeof appRouter;
