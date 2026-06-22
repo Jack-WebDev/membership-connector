@@ -10,9 +10,16 @@ import type { DbExecutor } from "@membership-connector-app/db/types";
 import { TRPCError } from "@trpc/server";
 import { and, eq, inArray, ne } from "drizzle-orm";
 
-import { notifyOrganizationAdmins } from "../notification/service";
+import {
+	createNotification,
+	notifyOrganizationAdmins,
+} from "../notification/service";
 import type {
+	AdminApplicationDetail,
+	AdminApplicationFilterOptions,
+	AdminApplicationSummary,
 	ApplicationAnswersInput,
+	ListAdminApplicationsInput,
 	MemberApplicationDetail,
 	MemberApplicationSummary,
 	RespondToInformationRequestInput,
@@ -496,4 +503,477 @@ export async function getDraftApplicationForMembership(
 	});
 
 	return application ? toDetail(application) : null;
+}
+
+const REVIEWABLE_APPLICATION_STATUSES = ["submitted", "under_review"] as const;
+
+function answerString(answers: Record<string, unknown>, key: string): string {
+	const value = answers[key];
+	return typeof value === "string" ? value : "";
+}
+
+async function findOrganizationApplicationOrThrow(
+	executor: DbExecutor,
+	organizationId: string,
+	applicationId: string,
+) {
+	const application = await executor.query.membershipApplications.findFirst({
+		where: and(
+			eq(membershipApplications.id, applicationId),
+			eq(membershipApplications.organizationId, organizationId),
+		),
+		with: {
+			membership: true,
+			membershipTier: true,
+		},
+	});
+
+	if (!application || application.status === "draft") {
+		throw new TRPCError({
+			code: "NOT_FOUND",
+			message: "Application not found",
+		});
+	}
+
+	return application;
+}
+
+type OrganizationApplicationWithRelations = Awaited<
+	ReturnType<typeof findOrganizationApplicationOrThrow>
+>;
+
+function toAdminSummary(
+	row: OrganizationApplicationWithRelations,
+): AdminApplicationSummary {
+	const answers = row.answers;
+
+	return {
+		id: row.id,
+		status: row.status,
+		membershipId: row.membershipId,
+		membershipName: row.membership.name,
+		membershipTierId: row.membershipTierId,
+		tierName: row.membershipTier.name,
+		applicantUserId: row.userId,
+		applicantName: answerString(answers, "applicantName"),
+		applicantEmail: answerString(answers, "applicantEmail"),
+		submittedAt: row.submittedAt,
+		updatedAt: row.updatedAt,
+	};
+}
+
+export async function listApplicationFilterOptions(
+	organizationId: string,
+): Promise<AdminApplicationFilterOptions> {
+	const orgMemberships = await db.query.memberships.findMany({
+		where: eq(memberships.organizationId, organizationId),
+		columns: { id: true, name: true },
+	});
+
+	const orgTiers = await db.query.membershipTiers.findMany({
+		where: inArray(
+			membershipTiers.membershipId,
+			orgMemberships.map((membership) => membership.id),
+		),
+		columns: { id: true, membershipId: true, name: true },
+	});
+
+	return {
+		memberships: orgMemberships,
+		tiers: orgTiers,
+	};
+}
+
+export async function listApplicationsForReview(
+	organizationId: string,
+	input: ListAdminApplicationsInput,
+): Promise<{ items: AdminApplicationSummary[]; total: number }> {
+	const rows = await db.query.membershipApplications.findMany({
+		where: and(
+			eq(membershipApplications.organizationId, organizationId),
+			ne(membershipApplications.status, "draft"),
+		),
+		with: {
+			membership: true,
+			membershipTier: true,
+		},
+	});
+
+	const search = input.search?.trim().toLowerCase();
+
+	const filtered = rows
+		.filter((row) => !input.status || row.status === input.status)
+		.filter(
+			(row) => !input.membershipId || row.membershipId === input.membershipId,
+		)
+		.filter(
+			(row) =>
+				!input.membershipTierId ||
+				row.membershipTierId === input.membershipTierId,
+		)
+		.filter(
+			(row) =>
+				!input.submittedFrom ||
+				(row.submittedAt != null && row.submittedAt >= input.submittedFrom),
+		)
+		.filter(
+			(row) =>
+				!input.submittedTo ||
+				(row.submittedAt != null && row.submittedAt <= input.submittedTo),
+		)
+		.filter((row) => {
+			if (!search) return true;
+
+			const haystack = [
+				answerString(row.answers, "applicantName"),
+				answerString(row.answers, "applicantEmail"),
+				row.membership.name,
+				row.membershipTier.name,
+			]
+				.join(" ")
+				.toLowerCase();
+
+			return haystack.includes(search);
+		})
+		.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+
+	const total = filtered.length;
+	const start = (input.page - 1) * input.pageSize;
+	const page = filtered.slice(start, start + input.pageSize);
+
+	return {
+		items: page.map(toAdminSummary),
+		total,
+	};
+}
+
+export async function getApplicationForReview(
+	organizationId: string,
+	applicationId: string,
+): Promise<AdminApplicationDetail> {
+	const application = await findOrganizationApplicationOrThrow(
+		db,
+		organizationId,
+		applicationId,
+	);
+
+	const member = await db.query.membershipMembers.findFirst({
+		where: eq(membershipMembers.applicationId, applicationId),
+		columns: { id: true, status: true },
+	});
+
+	return {
+		...toAdminSummary(application),
+		answers: application.answers,
+		reviewNotes: application.reviewNotes,
+		reviewedAt: application.reviewedAt,
+		reviewedByUserId: application.reviewedByUserId,
+		createdAt: application.createdAt,
+		member: member ?? null,
+	};
+}
+
+export async function markApplicationUnderReview(
+	organizationId: string,
+	userId: string,
+	applicationId: string,
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const application = await findOrganizationApplicationOrThrow(
+			tx,
+			organizationId,
+			applicationId,
+		);
+
+		if (application.status !== "submitted") {
+			throw new TRPCError({
+				code: "BAD_REQUEST",
+				message: "Only submitted applications can be marked under review",
+			});
+		}
+
+		await tx
+			.update(membershipApplications)
+			.set({ status: "under_review" })
+			.where(eq(membershipApplications.id, applicationId));
+
+		await tx.insert(auditLogs).values({
+			id: crypto.randomUUID(),
+			organizationId,
+			actorUserId: userId,
+			action: "application.under_review",
+			entityType: "membership_application",
+			entityId: applicationId,
+			metadata: { from: application.status },
+		});
+
+		await createNotification(tx, {
+			userId: application.userId,
+			type: "application.under_review",
+			title: "Application under review",
+			body: `Your application to ${application.membership.name} is now under review.`,
+			data: { applicationId },
+		});
+	});
+}
+
+export async function approveApplication(
+	organizationId: string,
+	userId: string,
+	applicationId: string,
+	reviewNotes?: string,
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const application = await findOrganizationApplicationOrThrow(
+			tx,
+			organizationId,
+			applicationId,
+		);
+
+		if (
+			!(REVIEWABLE_APPLICATION_STATUSES as readonly string[]).includes(
+				application.status,
+			)
+		) {
+			throw new TRPCError({
+				code: "BAD_REQUEST",
+				message: "This application cannot be approved from its current status",
+			});
+		}
+
+		const existingMember = await tx.query.membershipMembers.findFirst({
+			where: and(
+				eq(membershipMembers.membershipId, application.membershipId),
+				eq(membershipMembers.userId, application.userId),
+				inArray(membershipMembers.status, ACTIVE_MEMBER_STATUSES),
+			),
+		});
+
+		if (existingMember) {
+			throw new TRPCError({
+				code: "CONFLICT",
+				message: "This member already has an active membership",
+			});
+		}
+
+		const memberStatus =
+			application.membershipTier.billingInterval === "free"
+				? "active"
+				: "pending_payment";
+
+		const now = new Date();
+
+		await tx.insert(membershipMembers).values({
+			id: crypto.randomUUID(),
+			membershipId: application.membershipId,
+			membershipTierId: application.membershipTierId,
+			organizationId,
+			userId: application.userId,
+			applicationId,
+			status: memberStatus,
+		});
+
+		await tx
+			.update(membershipApplications)
+			.set({
+				status: "approved",
+				reviewedAt: now,
+				reviewedByUserId: userId,
+				...(reviewNotes ? { reviewNotes } : {}),
+			})
+			.where(eq(membershipApplications.id, applicationId));
+
+		await tx.insert(auditLogs).values({
+			id: crypto.randomUUID(),
+			organizationId,
+			actorUserId: userId,
+			action: "application.approved",
+			entityType: "membership_application",
+			entityId: applicationId,
+			metadata: {
+				membershipId: application.membershipId,
+				membershipTierId: application.membershipTierId,
+				memberStatus,
+			},
+		});
+
+		await createNotification(tx, {
+			userId: application.userId,
+			type: "application.approved",
+			title: "Application approved",
+			body:
+				memberStatus === "active"
+					? `You're now a member of ${application.membership.name}.`
+					: `Your application to ${application.membership.name} was approved. Complete payment to activate your membership.`,
+			data: { applicationId, membershipId: application.membershipId },
+		});
+	});
+}
+
+export async function rejectApplication(
+	organizationId: string,
+	userId: string,
+	applicationId: string,
+	reviewNotes: string,
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const application = await findOrganizationApplicationOrThrow(
+			tx,
+			organizationId,
+			applicationId,
+		);
+
+		if (
+			!(REVIEWABLE_APPLICATION_STATUSES as readonly string[]).includes(
+				application.status,
+			)
+		) {
+			throw new TRPCError({
+				code: "BAD_REQUEST",
+				message: "This application cannot be rejected from its current status",
+			});
+		}
+
+		const now = new Date();
+
+		await tx
+			.update(membershipApplications)
+			.set({
+				status: "rejected",
+				reviewedAt: now,
+				reviewedByUserId: userId,
+				reviewNotes,
+			})
+			.where(eq(membershipApplications.id, applicationId));
+
+		await tx.insert(auditLogs).values({
+			id: crypto.randomUUID(),
+			organizationId,
+			actorUserId: userId,
+			action: "application.rejected",
+			entityType: "membership_application",
+			entityId: applicationId,
+			metadata: { reviewNotes },
+		});
+
+		await createNotification(tx, {
+			userId: application.userId,
+			type: "application.rejected",
+			title: "Application rejected",
+			body: `Your application to ${application.membership.name} was rejected. Reason: ${reviewNotes}`,
+			data: { applicationId },
+		});
+	});
+}
+
+export async function requestApplicationInformation(
+	organizationId: string,
+	userId: string,
+	applicationId: string,
+	message: string,
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const application = await findOrganizationApplicationOrThrow(
+			tx,
+			organizationId,
+			applicationId,
+		);
+
+		if (
+			!(REVIEWABLE_APPLICATION_STATUSES as readonly string[]).includes(
+				application.status,
+			)
+		) {
+			throw new TRPCError({
+				code: "BAD_REQUEST",
+				message:
+					"This application cannot have more information requested from its current status",
+			});
+		}
+
+		const now = new Date();
+
+		await tx
+			.update(membershipApplications)
+			.set({
+				status: "needs_information",
+				reviewedAt: now,
+				reviewedByUserId: userId,
+				reviewNotes: message,
+			})
+			.where(eq(membershipApplications.id, applicationId));
+
+		await tx.insert(auditLogs).values({
+			id: crypto.randomUUID(),
+			organizationId,
+			actorUserId: userId,
+			action: "application.needs_information",
+			entityType: "membership_application",
+			entityId: applicationId,
+			metadata: { message },
+		});
+
+		await createNotification(tx, {
+			userId: application.userId,
+			type: "application.needs_information",
+			title: "More information requested",
+			body: `${application.membership.name} requested more information: ${message}`,
+			data: { applicationId },
+		});
+	});
+}
+
+export async function markApplicationPaymentReceived(
+	organizationId: string,
+	userId: string,
+	applicationId: string,
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		const application = await findOrganizationApplicationOrThrow(
+			tx,
+			organizationId,
+			applicationId,
+		);
+
+		if (application.status !== "approved") {
+			throw new TRPCError({
+				code: "BAD_REQUEST",
+				message: "Only approved applications can have payment recorded",
+			});
+		}
+
+		const member = await tx.query.membershipMembers.findFirst({
+			where: eq(membershipMembers.applicationId, applicationId),
+		});
+
+		if (member?.status !== "pending_payment") {
+			throw new TRPCError({
+				code: "BAD_REQUEST",
+				message: "This membership is not awaiting payment",
+			});
+		}
+
+		await tx
+			.update(membershipMembers)
+			.set({ status: "active" })
+			.where(eq(membershipMembers.id, member.id));
+
+		await tx.insert(auditLogs).values({
+			id: crypto.randomUUID(),
+			organizationId,
+			actorUserId: userId,
+			action: "membership.payment_received",
+			entityType: "membership_member",
+			entityId: member.id,
+			metadata: { applicationId },
+		});
+
+		await createNotification(tx, {
+			userId: application.userId,
+			type: "membership.payment_received",
+			title: "Payment received",
+			body: `Your payment was received. Your membership to ${application.membership.name} is now active.`,
+			data: { applicationId, membershipId: application.membershipId },
+		});
+	});
 }

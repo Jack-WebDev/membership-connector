@@ -72,3 +72,88 @@ export type MemberApplicationDetail = MemberApplicationSummary & {
 	reviewedAt: Date | null;
 	createdAt: Date;
 };
+
+const applicationStatusValues = [
+	"draft",
+	"submitted",
+	"under_review",
+	"needs_information",
+	"approved",
+	"rejected",
+	"withdrawn",
+	"cancelled",
+] as const;
+
+export const listAdminApplicationsInput = z.object({
+	search: z.string().trim().max(160).optional(),
+	status: z.enum(applicationStatusValues).optional(),
+	membershipId: z.string().trim().min(1).optional(),
+	membershipTierId: z.string().trim().min(1).optional(),
+	submittedFrom: z.coerce.date().optional(),
+	submittedTo: z.coerce.date().optional(),
+	page: z.coerce.number().int().min(1).default(1),
+	pageSize: z.coerce.number().int().min(1).max(100).default(20),
+});
+export type ListAdminApplicationsInput = z.infer<
+	typeof listAdminApplicationsInput
+>;
+
+export const reviewNotesInput = z.object({
+	applicationId: z.string().trim().min(1),
+	reviewNotes: z.string().trim().max(2000).optional(),
+});
+export type ReviewNotesInput = z.infer<typeof reviewNotesInput>;
+
+export const rejectApplicationInput = z.object({
+	applicationId: z.string().trim().min(1),
+	reviewNotes: z
+		.string()
+		.trim()
+		.min(1, "A rejection reason is required")
+		.max(2000),
+});
+export type RejectApplicationInput = z.infer<typeof rejectApplicationInput>;
+
+export const requestApplicationInformationInput = z.object({
+	applicationId: z.string().trim().min(1),
+	message: z.string().trim().min(1, "A message is required").max(2000),
+});
+export type RequestApplicationInformationInput = z.infer<
+	typeof requestApplicationInformationInput
+>;
+
+export type AdminApplicationSummary = {
+	id: string;
+	status: MemberApplicationStatus;
+	membershipId: string;
+	membershipName: string;
+	membershipTierId: string;
+	tierName: string;
+	applicantUserId: string;
+	applicantName: string;
+	applicantEmail: string;
+	submittedAt: Date | null;
+	updatedAt: Date;
+};
+
+export type AdminApplicationDetail = AdminApplicationSummary & {
+	answers: Record<string, unknown>;
+	reviewNotes: string | null;
+	reviewedAt: Date | null;
+	reviewedByUserId: string | null;
+	createdAt: Date;
+	member: {
+		id: string;
+		status:
+			| "active"
+			| "pending_payment"
+			| "expired"
+			| "cancelled"
+			| "suspended";
+	} | null;
+};
+
+export type AdminApplicationFilterOptions = {
+	memberships: { id: string; name: string }[];
+	tiers: { id: string; membershipId: string; name: string }[];
+};

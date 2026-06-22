@@ -1,9 +1,20 @@
 import { router } from "../index";
-import { memberProcedure } from "../procedures";
 import {
+	memberProcedure,
+	organizationPermissionProcedure,
+} from "../procedures";
+import {
+	approveApplication,
+	getApplicationForReview,
 	getDraftApplicationForMembership,
 	getMemberApplicationDetail,
+	listApplicationFilterOptions,
+	listApplicationsForReview,
 	listMemberApplications,
+	markApplicationPaymentReceived,
+	markApplicationUnderReview,
+	rejectApplication,
+	requestApplicationInformation,
 	respondToInformationRequest,
 	saveApplicationDraft,
 	submitApplication,
@@ -11,8 +22,12 @@ import {
 } from "./service";
 import {
 	applicationIdInput,
+	listAdminApplicationsInput,
 	membershipIdInput,
+	rejectApplicationInput,
+	requestApplicationInformationInput,
 	respondToInformationRequestInput,
+	reviewNotesInput,
 	saveApplicationDraftInput,
 	submitApplicationInput,
 } from "./types";
@@ -56,5 +71,83 @@ export const membershipApplicationRouter = router({
 		.input(respondToInformationRequestInput)
 		.mutation(({ ctx, input }) =>
 			respondToInformationRequest(ctx.session.user.id, input),
+		),
+
+	adminList: organizationPermissionProcedure("view_applications")
+		.input(listAdminApplicationsInput)
+		.query(({ ctx, input }) =>
+			listApplicationsForReview(ctx.organization.organizationId, input),
+		),
+
+	adminFilterOptions: organizationPermissionProcedure(
+		"view_applications",
+	).query(({ ctx }) =>
+		listApplicationFilterOptions(ctx.organization.organizationId),
+	),
+
+	adminGet: organizationPermissionProcedure("view_applications")
+		.input(applicationIdInput)
+		.query(({ ctx, input }) =>
+			getApplicationForReview(
+				ctx.organization.organizationId,
+				input.applicationId,
+			),
+		),
+
+	adminMarkUnderReview: organizationPermissionProcedure("review_applications")
+		.input(applicationIdInput)
+		.mutation(({ ctx, input }) =>
+			markApplicationUnderReview(
+				ctx.organization.organizationId,
+				ctx.session.user.id,
+				input.applicationId,
+			),
+		),
+
+	adminApprove: organizationPermissionProcedure("review_applications")
+		.input(reviewNotesInput)
+		.mutation(({ ctx, input }) =>
+			approveApplication(
+				ctx.organization.organizationId,
+				ctx.session.user.id,
+				input.applicationId,
+				input.reviewNotes,
+			),
+		),
+
+	adminReject: organizationPermissionProcedure("review_applications")
+		.input(rejectApplicationInput)
+		.mutation(({ ctx, input }) =>
+			rejectApplication(
+				ctx.organization.organizationId,
+				ctx.session.user.id,
+				input.applicationId,
+				input.reviewNotes,
+			),
+		),
+
+	adminRequestInformation: organizationPermissionProcedure(
+		"review_applications",
+	)
+		.input(requestApplicationInformationInput)
+		.mutation(({ ctx, input }) =>
+			requestApplicationInformation(
+				ctx.organization.organizationId,
+				ctx.session.user.id,
+				input.applicationId,
+				input.message,
+			),
+		),
+
+	adminMarkPaymentReceived: organizationPermissionProcedure(
+		"review_applications",
+	)
+		.input(applicationIdInput)
+		.mutation(({ ctx, input }) =>
+			markApplicationPaymentReceived(
+				ctx.organization.organizationId,
+				ctx.session.user.id,
+				input.applicationId,
+			),
 		),
 });
