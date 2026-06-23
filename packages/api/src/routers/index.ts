@@ -1,4 +1,5 @@
 import { announcementRouter } from "../announcement/router";
+import { financeRouter } from "../finance/router";
 import { protectedProcedure, publicProcedure, router } from "../index";
 import { membershipRouter } from "../membership/router";
 import { membershipApplicationRouter } from "../membership-application/router";
@@ -25,6 +26,7 @@ export const appRouter = router({
 	membershipApplication: membershipApplicationRouter,
 	membershipMember: membershipMemberRouter,
 	announcement: announcementRouter,
+	finance: financeRouter,
 	notification: notificationRouter,
 	user: userRouter,
 	organization: organizationRouter,
