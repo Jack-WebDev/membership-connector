@@ -10,7 +10,7 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { memberships } from "./membership";
+import { memberships, membershipTiers } from "./membership";
 import { organizations } from "./organization";
 import { timestamps } from "./shared";
 
@@ -53,12 +53,18 @@ export const announcements = pgTable(
 		status: announcementStatusEnum("status").notNull().default("draft"),
 		pinned: boolean("pinned").notNull().default(false),
 		publishedAt: timestamp("published_at"),
+		targetMembershipTierId: text("target_membership_tier_id").references(
+			() => membershipTiers.id,
+		),
 		...timestamps,
 	},
 	(table) => [
 		index("announcements_membership_id_idx").on(table.membershipId),
 		index("announcements_status_idx").on(table.status),
 		index("announcements_organization_id_idx").on(table.organizationId),
+		index("announcements_target_membership_tier_id_idx").on(
+			table.targetMembershipTierId,
+		),
 	],
 );
 
@@ -124,6 +130,10 @@ export const announcementRelations = relations(
 		authorUser: one(user, {
 			fields: [announcements.authorUserId],
 			references: [user.id],
+		}),
+		targetTier: one(membershipTiers, {
+			fields: [announcements.targetMembershipTierId],
+			references: [membershipTiers.id],
 		}),
 		likes: many(announcementLikes),
 		comments: many(announcementComments),

@@ -106,6 +106,8 @@ export default async function MemberDashboardPage() {
 										).toLocaleDateString()}
 										visibilityLabel={announcement.visibilityLabel}
 										pinned={announcement.pinned}
+										likes={announcement.likesCount}
+										comments={announcement.commentsCount}
 									/>
 								))}
 							</div>

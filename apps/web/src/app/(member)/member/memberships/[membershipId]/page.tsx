@@ -1,6 +1,4 @@
-import { AnnouncementCard } from "@membership-connector-app/ui/components/announcement-card";
 import { DashboardHeader } from "@membership-connector-app/ui/components/dashboard-header";
-import { EmptyState } from "@membership-connector-app/ui/components/empty-state";
 import { FormSection } from "@membership-connector-app/ui/components/form-section";
 import { StatusBadge } from "@membership-connector-app/ui/components/status-badge";
 import {
@@ -19,6 +17,8 @@ import {
 } from "@/lib/membership-presenters";
 import { requireMemberSession } from "@/lib/server-auth";
 import { serverTrpcAuthed } from "@/utils/trpc-server";
+
+import { MemberAnnouncementFeed } from "./_components/member-announcement-feed";
 
 const STATUS_TONES: Record<string, StatusBadgeTone> = {
 	active: "success",
@@ -172,24 +172,22 @@ export default async function MemberMembershipDetailPage({
 				</TabsContent>
 
 				<TabsContent value="announcements" className="space-y-4 pt-4">
-					{announcements.length > 0 ? (
-						announcements.map((announcement) => (
-							<AnnouncementCard
-								key={announcement.id}
-								title={announcement.title}
-								body={announcement.body}
-								authorName={announcement.authorName}
-								publishedAt={announcement.publishedAt.toLocaleDateString()}
-								visibilityLabel={announcement.visibilityLabel}
-								pinned={announcement.pinned}
-							/>
-						))
-					) : (
-						<EmptyState
-							title="No announcements yet"
-							description="When this organization publishes an announcement, it will show up here."
-						/>
-					)}
+					<MemberAnnouncementFeed
+						announcements={announcements.map((announcement) => ({
+							id: announcement.id,
+							title: announcement.title,
+							body: announcement.body,
+							authorName: announcement.authorName,
+							publishedAt: new Date(
+								announcement.publishedAt,
+							).toLocaleDateString(),
+							visibilityLabel: announcement.visibilityLabel,
+							pinned: announcement.pinned,
+							likesCount: announcement.likesCount,
+							commentsCount: announcement.commentsCount,
+							likedByMe: announcement.likedByMe,
+						}))}
+					/>
 				</TabsContent>
 
 				<TabsContent value="billing" className="pt-4">
