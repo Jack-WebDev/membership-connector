@@ -1,11 +1,23 @@
-import ScaffoldPage from "@/components/scaffold-page";
+import { DashboardHeader } from "@membership-connector-app/ui/components/dashboard-header";
 
-export default function MemberNotificationsPage() {
+import { NotificationList } from "@/components/notifications/notification-list";
+import { requireMemberSession } from "@/lib/server-auth";
+import { serverTrpcAuthed } from "@/utils/trpc-server";
+
+export default async function MemberNotificationsPage() {
+	await requireMemberSession("/member/notifications");
+
+	const notifications = await serverTrpcAuthed.notification.listMine.query({
+		limit: 100,
+	});
+
 	return (
-		<ScaffoldPage
-			title="Notifications"
-			description="Notification dropdowns and pages are now visually scaffolded even though notification services are not yet implemented."
-			statusLabel="Notifications"
-		/>
+		<div className="space-y-6">
+			<DashboardHeader
+				title="Notifications"
+				description="Updates about your applications, memberships, and announcements."
+			/>
+			<NotificationList notifications={notifications} />
+		</div>
 	);
 }

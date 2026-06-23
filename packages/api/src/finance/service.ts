@@ -11,6 +11,10 @@ import { and, eq } from "drizzle-orm";
 
 import { findOrganizationMembershipOrThrow } from "../membership/service";
 import { listMemberFilterOptions } from "../membership-member/service";
+import {
+	createNotification,
+	notifyOrganizationAdmins,
+} from "../notification/service";
 import { financeTransactionMatchesSearch } from "./search";
 import type {
 	AdminFinanceTransactionDetail,
@@ -264,7 +268,7 @@ export async function createFinanceTransaction(
 	const transactionId = crypto.randomUUID();
 
 	await db.transaction(async (tx) => {
-		await findOrganizationMembershipOrThrow(
+		const membership = await findOrganizationMembershipOrThrow(
 			tx,
 			organizationId,
 			input.membershipId,
@@ -306,6 +310,33 @@ export async function createFinanceTransaction(
 				amount: input.amount,
 			},
 		});
+
+		await notifyOrganizationAdmins(tx, organizationId, "view_finances", {
+			type: "finance.created",
+			title: "Finance record created",
+			body: `A ${input.type.replace("_", " ")} record of ${input.currency} ${input.amount.toFixed(2)} was recorded for ${membership.name}.`,
+			data: { transactionId, membershipId: input.membershipId },
+		});
+
+		if (input.userId && input.status === "successful") {
+			await createNotification(tx, {
+				userId: input.userId,
+				type: "finance.payment_successful",
+				title: "Payment recorded as successful",
+				body: `Your payment of ${input.currency} ${input.amount.toFixed(2)} for ${membership.name} was recorded as successful.`,
+				data: { transactionId, membershipId: input.membershipId },
+			});
+		}
+
+		if (input.userId && input.status === "failed") {
+			await createNotification(tx, {
+				userId: input.userId,
+				type: "finance.payment_failed",
+				title: "Payment recorded as failed",
+				body: `Your payment of ${input.currency} ${input.amount.toFixed(2)} for ${membership.name} was recorded as failed.`,
+				data: { transactionId, membershipId: input.membershipId },
+			});
+		}
 	});
 
 	return { transactionId };

@@ -70,6 +70,7 @@ export const memberNavItems = (
 export const organizationNavItems = (
 	orgSlug: string,
 	role: OrganizationAdminRole,
+	unreadNotifications = 0,
 ): NavigationItem[] => {
 	const basePath = `/org/${orgSlug}`;
 
@@ -126,7 +127,7 @@ export const organizationNavItems = (
 			label: "Notifications",
 			href: `${basePath}/notifications`,
 			icon: <BellIcon className="size-4" />,
-			badge: 12,
+			badge: unreadNotifications > 0 ? unreadNotifications : undefined,
 		},
 		{
 			label: "Settings",

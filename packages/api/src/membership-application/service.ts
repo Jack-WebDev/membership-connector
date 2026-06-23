@@ -807,6 +807,15 @@ export async function approveApplication(
 					: `Your application to ${application.membership.name} was approved. Complete payment to activate your membership.`,
 			data: { applicationId, membershipId: application.membershipId },
 		});
+
+		if (memberStatus === "active") {
+			await notifyOrganizationAdmins(tx, organizationId, "manage_members", {
+				type: "member.activated",
+				title: "New member activated",
+				body: `A new member joined ${application.membership.name}.`,
+				data: { applicationId, membershipId: application.membershipId },
+			});
+		}
 	});
 }
 
