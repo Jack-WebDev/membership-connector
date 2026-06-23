@@ -35,12 +35,14 @@ export default function AppShell({
 	subtitle,
 	items,
 	defaultOpen,
+	notificationBell,
 	children,
 }: {
 	title: string;
 	subtitle?: string;
 	items: NavigationItem[];
 	defaultOpen: boolean;
+	notificationBell?: { unreadCount: number; items: React.ReactNode[] };
 	children: React.ReactNode;
 }) {
 	const pathname = usePathname();
@@ -74,15 +76,8 @@ export default function AppShell({
 				<header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-2 border-border border-b bg-background/95 px-4 backdrop-blur">
 					<SidebarTrigger />
 					<NotificationBell
-						unreadCount={3}
-						items={[
-							<span key="1" className="block">
-								New application placeholder
-							</span>,
-							<span key="2" className="block">
-								Announcement draft placeholder
-							</span>,
-						]}
+						unreadCount={notificationBell?.unreadCount ?? 0}
+						items={notificationBell?.items ?? []}
 					/>
 				</header>
 				<div className="flex-1 p-4 sm:p-6">{children}</div>

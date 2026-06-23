@@ -136,9 +136,11 @@ export async function listPublicMemberships(
 			membershipMatchesSearch(row, row.organization.name, input.search),
 		);
 
-	return filtered
-		.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-		.map(toSummary);
+	const sorted = filtered.sort(
+		(a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+	);
+
+	return sorted.slice(0, input.limit ?? sorted.length).map(toSummary);
 }
 
 export async function listPublicMembershipFilterOptions(): Promise<{
@@ -255,6 +257,27 @@ export async function isMembershipSavedByUser(
 	});
 
 	return existing != null;
+}
+
+export async function listSavedMembershipsForUser(
+	userId: string,
+): Promise<PublicMembershipSummary[]> {
+	const rows = await db.query.savedMemberships.findMany({
+		where: eq(savedMemberships.userId, userId),
+		with: {
+			membership: {
+				with: {
+					organization: true,
+					tiers: { where: eq(membershipTiers.status, "active") },
+				},
+			},
+		},
+		orderBy: (table, { desc }) => desc(table.createdAt),
+	});
+
+	return rows
+		.filter((row) => row.membership.organization.status === "active")
+		.map((row) => toSummary(row.membership));
 }
 
 const MEMBERSHIP_STATUS_TRANSITIONS: Record<string, string[]> = {

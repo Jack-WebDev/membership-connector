@@ -1,9 +1,13 @@
+import { announcementRouter } from "../announcement/router";
 import { protectedProcedure, publicProcedure, router } from "../index";
 import { membershipRouter } from "../membership/router";
 import { membershipApplicationRouter } from "../membership-application/router";
+import { membershipMemberRouter } from "../membership-member/router";
 import { membershipTierRouter } from "../membership-tier/router";
+import { notificationRouter } from "../notification/router";
 import { onboardingRouter } from "../onboarding/router";
 import { organizationRouter } from "../organization/router";
+import { userRouter } from "../user/router";
 
 export const appRouter = router({
 	healthCheck: publicProcedure.query(() => {
@@ -19,6 +23,10 @@ export const appRouter = router({
 	membership: membershipRouter,
 	membershipTier: membershipTierRouter,
 	membershipApplication: membershipApplicationRouter,
+	membershipMember: membershipMemberRouter,
+	announcement: announcementRouter,
+	notification: notificationRouter,
+	user: userRouter,
 	organization: organizationRouter,
 });
 export type AppRouter = typeof appRouter;

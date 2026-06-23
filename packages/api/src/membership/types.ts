@@ -9,6 +9,7 @@ export const listPublicMembershipsInput = z.object({
 	pricing: z.enum(["free", "paid"]).optional(),
 	organizationSlug: z.string().trim().max(160).optional(),
 	sort: z.enum(["newest"]).default("newest"),
+	limit: z.coerce.number().int().min(1).max(50).optional(),
 });
 export type ListPublicMembershipsInput = z.infer<
 	typeof listPublicMembershipsInput

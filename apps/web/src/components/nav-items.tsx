@@ -25,7 +25,10 @@ export const publicNavItems: NavigationItem[] = [
 	{ label: "Register", href: "/auth/register" },
 ];
 
-export const memberNavItems = (basePath = "/member"): NavigationItem[] => [
+export const memberNavItems = (
+	basePath = "/member",
+	unreadNotifications = 0,
+): NavigationItem[] => [
 	{
 		label: "Dashboard",
 		href: `${basePath}/dashboard`,
@@ -55,7 +58,7 @@ export const memberNavItems = (basePath = "/member"): NavigationItem[] => [
 		label: "Notifications",
 		href: `${basePath}/notifications`,
 		icon: <BellIcon className="size-4" />,
-		badge: 4,
+		badge: unreadNotifications > 0 ? unreadNotifications : undefined,
 	},
 	{
 		label: "Settings",

@@ -15,6 +15,7 @@ import {
 	listAdminMemberships,
 	listPublicMembershipFilterOptions,
 	listPublicMemberships,
+	listSavedMembershipsForUser,
 	toggleSavedMembership,
 	transitionMembershipStatus,
 	updateMembership,
@@ -72,6 +73,10 @@ export const membershipRouter = router({
 		.query(({ ctx, input }) =>
 			isMembershipSavedByUser(ctx.session.user.id, input.membershipId),
 		),
+
+	listSaved: memberProcedure.query(({ ctx }) =>
+		listSavedMembershipsForUser(ctx.session.user.id),
+	),
 
 	adminList: organizationPermissionProcedure("manage_memberships")
 		.input(listAdminMembershipsInput)
