@@ -8,6 +8,7 @@ import { membershipTierRouter } from "../membership-tier/router";
 import { notificationRouter } from "../notification/router";
 import { onboardingRouter } from "../onboarding/router";
 import { organizationRouter } from "../organization/router";
+import { organizationAdminRouter } from "../organization-admin/router";
 import { userRouter } from "../user/router";
 
 export const appRouter = router({
@@ -30,5 +31,6 @@ export const appRouter = router({
 	notification: notificationRouter,
 	user: userRouter,
 	organization: organizationRouter,
+	organizationAdmin: organizationAdminRouter,
 });
 export type AppRouter = typeof appRouter;
