@@ -91,11 +91,25 @@ export const listAdminApplicationsInput = z.object({
 	membershipTierId: z.string().trim().min(1).optional(),
 	submittedFrom: z.coerce.date().optional(),
 	submittedTo: z.coerce.date().optional(),
+	sortBy: z.enum(["submittedAt", "updatedAt"]).default("updatedAt"),
+	sortDir: z.enum(["asc", "desc"]).default("desc"),
 	page: z.coerce.number().int().min(1).default(1),
 	pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 export type ListAdminApplicationsInput = z.infer<
 	typeof listAdminApplicationsInput
+>;
+
+export const listMemberApplicationsInput = z.object({
+	search: z.string().trim().max(160).optional(),
+	status: z.enum(applicationStatusValues).optional(),
+	sortBy: z.enum(["submittedAt", "updatedAt"]).default("updatedAt"),
+	sortDir: z.enum(["asc", "desc"]).default("desc"),
+	page: z.coerce.number().int().min(1).default(1),
+	pageSize: z.coerce.number().int().min(1).max(100).default(20),
+});
+export type ListMemberApplicationsInput = z.infer<
+	typeof listMemberApplicationsInput
 >;
 
 export const reviewNotesInput = z.object({

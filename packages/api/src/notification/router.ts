@@ -11,7 +11,7 @@ export const notificationRouter = router({
 	listMine: protectedProcedure
 		.input(listNotificationsInput)
 		.query(({ ctx, input }) =>
-			listNotificationsForUser(ctx.session.user.id, input.limit),
+			listNotificationsForUser(ctx.session.user.id, input),
 		),
 
 	unreadCount: protectedProcedure.query(({ ctx }) =>

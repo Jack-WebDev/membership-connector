@@ -9,7 +9,10 @@ import {
 	hasOrganizationPermission,
 	type OrganizationPermission,
 } from "../permissions/permissions";
-import type { MemberNotificationSummary } from "./types";
+import type {
+	ListNotificationsInput,
+	MemberNotificationListResult,
+} from "./types";
 
 type NotificationInput = {
 	userId: string;
@@ -63,13 +66,26 @@ export async function notifyOrganizationAdmins(
 
 export async function listNotificationsForUser(
 	userId: string,
-	limit?: number,
-): Promise<MemberNotificationSummary[]> {
-	return db.query.notifications.findMany({
+	input: ListNotificationsInput,
+): Promise<MemberNotificationListResult> {
+	const rows = await db.query.notifications.findMany({
 		where: eq(notifications.userId, userId),
 		orderBy: (table, { desc }) => desc(table.createdAt),
-		limit,
 	});
+
+	const search = input.search?.trim().toLowerCase();
+
+	const filtered = rows.filter((row) => {
+		if (!search) return true;
+
+		return [row.title, row.body].join(" ").toLowerCase().includes(search);
+	});
+
+	const total = filtered.length;
+	const start = (input.page - 1) * input.pageSize;
+	const items = filtered.slice(start, start + input.pageSize);
+
+	return { items, total };
 }
 
 export async function countUnreadNotificationsForUser(

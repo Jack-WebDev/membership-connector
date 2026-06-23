@@ -15,6 +15,7 @@ import type { StatusBadgeTone } from "@membership-connector-app/ui/lib/app-types
 import type { Route } from "next";
 import Link from "next/link";
 
+import { SortableHeader } from "@/components/data-table/sortable-header";
 import { requireOrganizationSession } from "@/lib/server-auth";
 import { serverTrpcAuthed } from "@/utils/trpc-server";
 
@@ -42,6 +43,8 @@ type OrganizationApplicationsPageProps = {
 		membershipTierId?: string;
 		submittedFrom?: string;
 		submittedTo?: string;
+		sortBy?: string;
+		sortDir?: string;
 		page?: string;
 	}>;
 };
@@ -69,6 +72,8 @@ export default async function OrganizationApplicationsPage({
 
 	const query = await searchParams;
 	const page = Number(query.page) > 0 ? Number(query.page) : 1;
+	const sortBy = query.sortBy === "submittedAt" ? "submittedAt" : "updatedAt";
+	const sortDir = query.sortDir === "asc" ? "asc" : "desc";
 
 	const [applications, filterOptions] = await Promise.all([
 		serverTrpcAuthed.membershipApplication.adminList.query({
@@ -89,6 +94,8 @@ export default async function OrganizationApplicationsPage({
 				? new Date(query.submittedFrom)
 				: undefined,
 			submittedTo: query.submittedTo ? new Date(query.submittedTo) : undefined,
+			sortBy,
+			sortDir,
 			page,
 			pageSize: PAGE_SIZE,
 		}),
@@ -108,7 +115,26 @@ export default async function OrganizationApplicationsPage({
 			params.set("membershipTierId", query.membershipTierId);
 		if (query.submittedFrom) params.set("submittedFrom", query.submittedFrom);
 		if (query.submittedTo) params.set("submittedTo", query.submittedTo);
+		if (query.sortBy) params.set("sortBy", query.sortBy);
+		if (query.sortDir) params.set("sortDir", query.sortDir);
 		params.set("page", String(targetPage));
+		return `?${params}` as Route;
+	}
+
+	function buildSortHref(column: "submittedAt" | "updatedAt"): Route {
+		const params = new URLSearchParams();
+		if (query.search) params.set("search", query.search);
+		if (query.status) params.set("status", query.status);
+		if (query.membershipId) params.set("membershipId", query.membershipId);
+		if (query.membershipTierId)
+			params.set("membershipTierId", query.membershipTierId);
+		if (query.submittedFrom) params.set("submittedFrom", query.submittedFrom);
+		if (query.submittedTo) params.set("submittedTo", query.submittedTo);
+		params.set("sortBy", column);
+		params.set(
+			"sortDir",
+			sortBy === column && sortDir === "desc" ? "asc" : "desc",
+		);
 		return `?${params}` as Route;
 	}
 
@@ -168,7 +194,14 @@ export default async function OrganizationApplicationsPage({
 					},
 					{
 						id: "submitted",
-						header: "Submitted",
+						header: (
+							<SortableHeader
+								label="Submitted"
+								href={buildSortHref("submittedAt")}
+								active={sortBy === "submittedAt"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) =>
 							row.submittedAt
 								? new Date(row.submittedAt).toLocaleDateString()
@@ -176,7 +209,14 @@ export default async function OrganizationApplicationsPage({
 					},
 					{
 						id: "updated",
-						header: "Updated",
+						header: (
+							<SortableHeader
+								label="Updated"
+								href={buildSortHref("updatedAt")}
+								active={sortBy === "updatedAt"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => new Date(row.updatedAt).toLocaleDateString(),
 					},
 				]}

@@ -4,6 +4,8 @@ import { SearchInput } from "@membership-connector-app/ui/components/search-inpu
 import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+
 function OrganizationSearch() {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -17,17 +19,20 @@ function OrganizationSearch() {
 		} else {
 			params.delete("search");
 		}
+		params.delete("page");
 
 		router.replace(
 			(params.size > 0 ? `${pathname}?${params}` : pathname) as Route,
 		);
 	}
 
+	const debouncedUpdateSearch = useDebouncedCallback(updateSearch);
+
 	return (
 		<SearchInput
 			placeholder="Search organizations"
 			defaultValue={searchParams.get("search") ?? ""}
-			onChange={(event) => updateSearch(event.target.value)}
+			onChange={(event) => debouncedUpdateSearch(event.target.value)}
 		/>
 	);
 }

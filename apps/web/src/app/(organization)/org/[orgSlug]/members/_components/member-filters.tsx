@@ -10,6 +10,8 @@ import { SearchInput } from "@membership-connector-app/ui/components/search-inpu
 import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+
 const STATUS_OPTIONS = [
 	{ label: "Active", value: "active" },
 	{ label: "Pending payment", value: "pending_payment" },
@@ -49,6 +51,10 @@ function MemberFilters({ memberships, tiers }: MemberFiltersProps) {
 	}
 
 	const membershipsById = new Map(memberships.map((m) => [m.id, m.name]));
+
+	const debouncedUpdateSearch = useDebouncedCallback((value: string) =>
+		updateParam("search", value),
+	);
 
 	return (
 		<FilterBar
@@ -121,7 +127,7 @@ function MemberFilters({ memberships, tiers }: MemberFiltersProps) {
 					<SearchInput
 						placeholder="Search members"
 						defaultValue={searchParams.get("search") ?? ""}
-						onChange={(event) => updateParam("search", event.target.value)}
+						onChange={(event) => debouncedUpdateSearch(event.target.value)}
 					/>
 					<FilterBarReset onClick={() => router.replace(pathname as Route)} />
 				</>

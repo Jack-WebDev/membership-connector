@@ -9,11 +9,17 @@ export const listPublicMembershipsInput = z.object({
 	pricing: z.enum(["free", "paid"]).optional(),
 	organizationSlug: z.string().trim().max(160).optional(),
 	sort: z.enum(["newest"]).default("newest"),
-	limit: z.coerce.number().int().min(1).max(50).optional(),
+	page: z.coerce.number().int().min(1).default(1),
+	pageSize: z.coerce.number().int().min(1).max(50).default(12),
 });
 export type ListPublicMembershipsInput = z.infer<
 	typeof listPublicMembershipsInput
 >;
+
+export type ListPublicMembershipsResult = {
+	items: PublicMembershipSummary[];
+	total: number;
+};
 
 export const getPublicMembershipInput = z.object({
 	organizationSlug: z.string().trim().min(1).max(160),
@@ -135,6 +141,8 @@ export const listAdminMembershipsInput = z.object({
 	search: z.string().trim().max(160).optional(),
 	status: z.enum(membershipStatusValues).optional(),
 	visibility: z.enum(membershipVisibilityValues).optional(),
+	sortBy: z.enum(["updatedAt", "name"]).default("updatedAt"),
+	sortDir: z.enum(["asc", "desc"]).default("desc"),
 	page: z.coerce.number().int().min(1).default(1),
 	pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });

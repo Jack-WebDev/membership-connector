@@ -6,7 +6,9 @@ export const notificationIdInput = z.object({
 export type NotificationIdInput = z.infer<typeof notificationIdInput>;
 
 export const listNotificationsInput = z.object({
-	limit: z.coerce.number().int().min(1).max(100).optional(),
+	search: z.string().trim().max(160).optional(),
+	page: z.coerce.number().int().min(1).default(1),
+	pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 export type ListNotificationsInput = z.infer<typeof listNotificationsInput>;
 
@@ -18,4 +20,9 @@ export type MemberNotificationSummary = {
 	data: Record<string, unknown>;
 	readAt: Date | null;
 	createdAt: Date;
+};
+
+export type MemberNotificationListResult = {
+	items: MemberNotificationSummary[];
+	total: number;
 };

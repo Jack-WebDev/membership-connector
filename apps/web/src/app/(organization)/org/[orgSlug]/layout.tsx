@@ -21,7 +21,7 @@ export default async function OrganizationLayout({
 
 	const [unreadCount, recentNotifications] = await Promise.all([
 		serverTrpcAuthed.notification.unreadCount.query(),
-		serverTrpcAuthed.notification.listMine.query({ limit: 5 }),
+		serverTrpcAuthed.notification.listMine.query({ pageSize: 5 }),
 	]);
 
 	return (
@@ -36,7 +36,7 @@ export default async function OrganizationLayout({
 			defaultOpen={defaultOpen}
 			notificationBell={{
 				unreadCount,
-				items: recentNotifications.map((notification) => (
+				items: recentNotifications.items.map((notification) => (
 					<span key={notification.id} className="block">
 						<span className="block font-medium text-foreground">
 							{notification.title}

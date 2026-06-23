@@ -725,7 +725,15 @@ export async function listAdminAnnouncements(
 				.toLowerCase()
 				.includes(search);
 		})
-		.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+		.sort((a, b) => {
+			const direction = input.sortDir === "asc" ? 1 : -1;
+
+			if (input.sortBy === "title") {
+				return a.title.localeCompare(b.title) * direction;
+			}
+
+			return (a.updatedAt.getTime() - b.updatedAt.getTime()) * direction;
+		});
 
 	const total = filtered.length;
 	const start = (input.page - 1) * input.pageSize;

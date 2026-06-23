@@ -17,6 +17,7 @@ import { PlusIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 
+import { SortableHeader } from "@/components/data-table/sortable-header";
 import { requireOrganizationSession } from "@/lib/server-auth";
 import { serverTrpcAuthed } from "@/utils/trpc-server";
 
@@ -37,6 +38,8 @@ type MembershipsPageProps = {
 		search?: string;
 		status?: string;
 		visibility?: string;
+		sortBy?: string;
+		sortDir?: string;
 		page?: string;
 	}>;
 };
@@ -64,6 +67,8 @@ export default async function OrganizationMembershipsPage({
 
 	const query = await searchParams;
 	const page = Number(query.page) > 0 ? Number(query.page) : 1;
+	const sortBy = query.sortBy === "name" ? "name" : "updatedAt";
+	const sortDir = query.sortDir === "asc" ? "asc" : "desc";
 
 	const [memberships, stats] = await Promise.all([
 		serverTrpcAuthed.membership.adminList.query({
@@ -80,6 +85,8 @@ export default async function OrganizationMembershipsPage({
 				| "private"
 				| "invite_only"
 				| undefined,
+			sortBy,
+			sortDir,
 			page,
 			pageSize: PAGE_SIZE,
 		}),
@@ -93,7 +100,22 @@ export default async function OrganizationMembershipsPage({
 		if (query.search) params.set("search", query.search);
 		if (query.status) params.set("status", query.status);
 		if (query.visibility) params.set("visibility", query.visibility);
+		if (query.sortBy) params.set("sortBy", query.sortBy);
+		if (query.sortDir) params.set("sortDir", query.sortDir);
 		params.set("page", String(targetPage));
+		return `?${params}` as Route;
+	}
+
+	function buildSortHref(column: "updatedAt" | "name"): Route {
+		const params = new URLSearchParams();
+		if (query.search) params.set("search", query.search);
+		if (query.status) params.set("status", query.status);
+		if (query.visibility) params.set("visibility", query.visibility);
+		params.set("sortBy", column);
+		params.set(
+			"sortDir",
+			sortBy === column && sortDir === "desc" ? "asc" : "desc",
+		);
 		return `?${params}` as Route;
 	}
 
@@ -127,7 +149,14 @@ export default async function OrganizationMembershipsPage({
 				columns={[
 					{
 						id: "name",
-						header: "Membership",
+						header: (
+							<SortableHeader
+								label="Membership"
+								href={buildSortHref("name")}
+								active={sortBy === "name"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => (
 							<div className="space-y-0.5">
 								<div className="font-medium text-foreground">{row.name}</div>
@@ -166,7 +195,14 @@ export default async function OrganizationMembershipsPage({
 					},
 					{
 						id: "updated",
-						header: "Updated",
+						header: (
+							<SortableHeader
+								label="Updated"
+								href={buildSortHref("updatedAt")}
+								active={sortBy === "updatedAt"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => new Date(row.updatedAt).toLocaleDateString(),
 					},
 				]}

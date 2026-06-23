@@ -275,7 +275,19 @@ export async function listAdminMembershipTiers(
 				row.name.toLowerCase().includes(search) ||
 				row.membership.name.toLowerCase().includes(search),
 		)
-		.sort((a, b) => a.sortOrder - b.sortOrder);
+		.sort((a, b) => {
+			const direction = input.sortDir === "asc" ? 1 : -1;
+
+			if (input.sortBy === "name") {
+				return a.name.localeCompare(b.name) * direction;
+			}
+
+			if (input.sortBy === "price") {
+				return (Number(a.price) - Number(b.price)) * direction;
+			}
+
+			return (a.sortOrder - b.sortOrder) * direction;
+		});
 
 	const total = filtered.length;
 	const start = (input.page - 1) * input.pageSize;

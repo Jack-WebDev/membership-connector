@@ -16,6 +16,7 @@ import { PlusIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 
+import { SortableHeader } from "@/components/data-table/sortable-header";
 import { requireOrganizationSession } from "@/lib/server-auth";
 import { serverTrpcAuthed } from "@/utils/trpc-server";
 
@@ -44,6 +45,8 @@ type OrganizationAnnouncementsPageProps = {
 		visibility?: string;
 		membershipId?: string;
 		pinned?: string;
+		sortBy?: string;
+		sortDir?: string;
 		page?: string;
 	}>;
 };
@@ -76,6 +79,8 @@ export default async function OrganizationAnnouncementsPage({
 
 	const query = await searchParams;
 	const page = Number(query.page) > 0 ? Number(query.page) : 1;
+	const sortBy = query.sortBy === "title" ? "title" : "updatedAt";
+	const sortDir = query.sortDir === "asc" ? "asc" : "desc";
 
 	const [announcements, filterOptions] = await Promise.all([
 		serverTrpcAuthed.announcement.adminList.query({
@@ -90,6 +95,8 @@ export default async function OrganizationAnnouncementsPage({
 				| undefined,
 			membershipId: query.membershipId,
 			pinned: query.pinned ? query.pinned === "true" : undefined,
+			sortBy,
+			sortDir,
 			page,
 			pageSize: PAGE_SIZE,
 		}),
@@ -107,7 +114,24 @@ export default async function OrganizationAnnouncementsPage({
 		if (query.visibility) params.set("visibility", query.visibility);
 		if (query.membershipId) params.set("membershipId", query.membershipId);
 		if (query.pinned) params.set("pinned", query.pinned);
+		if (query.sortBy) params.set("sortBy", query.sortBy);
+		if (query.sortDir) params.set("sortDir", query.sortDir);
 		params.set("page", String(targetPage));
+		return `?${params}` as Route;
+	}
+
+	function buildSortHref(column: "updatedAt" | "title"): Route {
+		const params = new URLSearchParams();
+		if (query.search) params.set("search", query.search);
+		if (query.status) params.set("status", query.status);
+		if (query.visibility) params.set("visibility", query.visibility);
+		if (query.membershipId) params.set("membershipId", query.membershipId);
+		if (query.pinned) params.set("pinned", query.pinned);
+		params.set("sortBy", column);
+		params.set(
+			"sortDir",
+			sortBy === column && sortDir === "desc" ? "asc" : "desc",
+		);
 		return `?${params}` as Route;
 	}
 
@@ -138,7 +162,14 @@ export default async function OrganizationAnnouncementsPage({
 				columns={[
 					{
 						id: "title",
-						header: "Title",
+						header: (
+							<SortableHeader
+								label="Title"
+								href={buildSortHref("title")}
+								active={sortBy === "title"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => (
 							<div className="space-y-0.5">
 								<div className="font-medium text-foreground">{row.title}</div>
@@ -175,7 +206,14 @@ export default async function OrganizationAnnouncementsPage({
 					},
 					{
 						id: "updated",
-						header: "Updated",
+						header: (
+							<SortableHeader
+								label="Updated"
+								href={buildSortHref("updatedAt")}
+								active={sortBy === "updatedAt"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => new Date(row.updatedAt).toLocaleDateString(),
 					},
 				]}

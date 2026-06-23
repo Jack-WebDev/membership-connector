@@ -44,6 +44,20 @@ export type MemberMembershipDetail = MemberMembershipSummary & {
 	organizationWebsiteUrl: string | null;
 };
 
+export const listMemberMembershipsInput = z.object({
+	search: z.string().trim().max(160).optional(),
+	status: z
+		.enum(["active", "pending_payment", "expired", "cancelled", "suspended"])
+		.optional(),
+	sortBy: z.enum(["startedAt", "expiresAt"]).default("startedAt"),
+	sortDir: z.enum(["asc", "desc"]).default("desc"),
+	page: z.coerce.number().int().min(1).default(1),
+	pageSize: z.coerce.number().int().min(1).max(100).default(20),
+});
+export type ListMemberMembershipsInput = z.infer<
+	typeof listMemberMembershipsInput
+>;
+
 export type MemberDashboardSummary = {
 	activeMemberships: number;
 	pendingApplications: number;
@@ -73,6 +87,8 @@ export const listAdminMembersInput = z.object({
 	paymentStatus: z.enum(["paid", "pending"]).optional(),
 	joinedFrom: z.coerce.date().optional(),
 	joinedTo: z.coerce.date().optional(),
+	sortBy: z.enum(["startedAt", "userName"]).default("startedAt"),
+	sortDir: z.enum(["asc", "desc"]).default("desc"),
 	page: z.coerce.number().int().min(1).default(1),
 	pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });

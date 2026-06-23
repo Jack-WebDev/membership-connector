@@ -15,7 +15,7 @@ import {
 export const organizationRouter = router({
 	listPublic: publicProcedure
 		.input(listPublicOrganizationsInput)
-		.query(({ input }) => listPublicOrganizations(input.search)),
+		.query(({ input }) => listPublicOrganizations(input)),
 
 	getPublicBySlug: publicProcedure
 		.input(getPublicOrganizationInput)

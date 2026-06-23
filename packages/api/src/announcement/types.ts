@@ -56,6 +56,8 @@ export const listAdminAnnouncementsInput = z.object({
 	visibility: z.enum(announcementVisibilityValues).optional(),
 	membershipId: z.string().trim().min(1).optional(),
 	pinned: z.coerce.boolean().optional(),
+	sortBy: z.enum(["updatedAt", "title"]).default("updatedAt"),
+	sortDir: z.enum(["asc", "desc"]).default("desc"),
 	page: z.coerce.number().int().min(1).default(1),
 	pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });

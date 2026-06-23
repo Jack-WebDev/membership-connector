@@ -18,6 +18,7 @@ import type {
 	AdminMemberFilterOptions,
 	AdminMemberSummary,
 	ListAdminMembersInput,
+	ListMemberMembershipsInput,
 	MemberDashboardSummary,
 	MemberMembershipDetail,
 	MemberMembershipSummary,
@@ -103,17 +104,50 @@ function toDetail(row: MembershipMemberWithRelations): MemberMembershipDetail {
 
 export async function listActiveMembershipsForUser(
 	userId: string,
-): Promise<MemberMembershipSummary[]> {
+	input: ListMemberMembershipsInput,
+): Promise<{ items: MemberMembershipSummary[]; total: number }> {
 	const rows = await db.query.membershipMembers.findMany({
 		where: eq(membershipMembers.userId, userId),
 		with: {
 			membership: { with: { organization: true } },
 			membershipTier: true,
 		},
-		orderBy: (table, { desc }) => desc(table.startedAt),
 	});
 
-	return rows.map(toSummary);
+	const search = input.search?.trim().toLowerCase();
+
+	const filtered = rows
+		.filter((row) => !input.status || row.status === input.status)
+		.filter((row) => {
+			if (!search) return true;
+
+			const haystack = [
+				row.membership.name,
+				row.membership.organization.name,
+				row.membershipTier.name,
+			]
+				.join(" ")
+				.toLowerCase();
+
+			return haystack.includes(search);
+		})
+		.sort((a, b) => {
+			const direction = input.sortDir === "asc" ? 1 : -1;
+
+			if (input.sortBy === "expiresAt") {
+				const aTime = a.expiresAt?.getTime() ?? 0;
+				const bTime = b.expiresAt?.getTime() ?? 0;
+				return (aTime - bTime) * direction;
+			}
+
+			return (a.startedAt.getTime() - b.startedAt.getTime()) * direction;
+		});
+
+	const total = filtered.length;
+	const start = (input.page - 1) * input.pageSize;
+	const page = filtered.slice(start, start + input.pageSize);
+
+	return { items: page.map(toSummary), total };
 }
 
 export async function getMembershipForUser(
@@ -273,7 +307,15 @@ export async function listOrganizationMembers(
 
 			return haystack.includes(search);
 		})
-		.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
+		.sort((a, b) => {
+			const direction = input.sortDir === "asc" ? 1 : -1;
+
+			if (input.sortBy === "userName") {
+				return a.user.name.localeCompare(b.user.name) * direction;
+			}
+
+			return (a.startedAt.getTime() - b.startedAt.getTime()) * direction;
+		});
 
 	const total = filtered.length;
 	const start = (input.page - 1) * input.pageSize;

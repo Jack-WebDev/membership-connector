@@ -205,7 +205,15 @@ export async function listAdminFinanceTransactions(
 		.filter((row) => !input.dateFrom || row.createdAt >= input.dateFrom)
 		.filter((row) => !input.dateTo || row.createdAt <= input.dateTo)
 		.filter((row) => financeTransactionMatchesSearch(row, input.search))
-		.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+		.sort((a, b) => {
+			const direction = input.sortDir === "asc" ? 1 : -1;
+
+			if (input.sortBy === "amount") {
+				return (Number(a.amount) - Number(b.amount)) * direction;
+			}
+
+			return (a.createdAt.getTime() - b.createdAt.getTime()) * direction;
+		});
 
 	const total = filtered.length;
 	const start = (input.page - 1) * input.pageSize;

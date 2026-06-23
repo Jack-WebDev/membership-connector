@@ -8,6 +8,8 @@ import { SearchInput } from "@membership-connector-app/ui/components/search-inpu
 import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+
 const STATUS_OPTIONS = [
 	{ label: "Draft", value: "draft" },
 	{ label: "Published", value: "published" },
@@ -49,6 +51,10 @@ function AnnouncementFilters({ memberships }: AnnouncementFiltersProps) {
 			(params.size > 0 ? `${pathname}?${params}` : pathname) as Route,
 		);
 	}
+
+	const debouncedUpdateSearch = useDebouncedCallback((value: string) =>
+		updateParam("search", value),
+	);
 
 	return (
 		<FilterBar
@@ -94,7 +100,7 @@ function AnnouncementFilters({ memberships }: AnnouncementFiltersProps) {
 					<SearchInput
 						placeholder="Search title or body"
 						defaultValue={searchParams.get("search") ?? ""}
-						onChange={(event) => updateParam("search", event.target.value)}
+						onChange={(event) => debouncedUpdateSearch(event.target.value)}
 					/>
 					<FilterBarReset onClick={() => router.replace(pathname as Route)} />
 				</>

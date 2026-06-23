@@ -65,6 +65,8 @@ export const listAdminFinanceTransactionsInput = z.object({
 	membershipTierId: z.string().trim().min(1).optional(),
 	dateFrom: z.coerce.date().optional(),
 	dateTo: z.coerce.date().optional(),
+	sortBy: z.enum(["createdAt", "amount"]).default("createdAt"),
+	sortDir: z.enum(["asc", "desc"]).default("desc"),
 	page: z.coerce.number().int().min(1).default(1),
 	pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });

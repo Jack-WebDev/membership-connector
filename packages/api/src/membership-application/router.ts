@@ -23,6 +23,7 @@ import {
 import {
 	applicationIdInput,
 	listAdminApplicationsInput,
+	listMemberApplicationsInput,
 	membershipIdInput,
 	rejectApplicationInput,
 	requestApplicationInformationInput,
@@ -33,9 +34,11 @@ import {
 } from "./types";
 
 export const membershipApplicationRouter = router({
-	listMine: memberProcedure.query(({ ctx }) =>
-		listMemberApplications(ctx.session.user.id),
-	),
+	listMine: memberProcedure
+		.input(listMemberApplicationsInput)
+		.query(({ ctx, input }) =>
+			listMemberApplications(ctx.session.user.id, input),
+		),
 
 	getMine: memberProcedure
 		.input(applicationIdInput)

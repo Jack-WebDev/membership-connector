@@ -15,6 +15,7 @@ import type { StatusBadgeTone } from "@membership-connector-app/ui/lib/app-types
 import type { Route } from "next";
 import Link from "next/link";
 
+import { SortableHeader } from "@/components/data-table/sortable-header";
 import { requireOrganizationSession } from "@/lib/server-auth";
 import { serverTrpcAuthed } from "@/utils/trpc-server";
 
@@ -45,6 +46,8 @@ type OrganizationMembersPageProps = {
 		paymentStatus?: string;
 		joinedFrom?: string;
 		joinedTo?: string;
+		sortBy?: string;
+		sortDir?: string;
 		page?: string;
 	}>;
 };
@@ -70,6 +73,8 @@ export default async function OrganizationMembersPage({
 
 	const query = await searchParams;
 	const page = Number(query.page) > 0 ? Number(query.page) : 1;
+	const sortBy = query.sortBy === "userName" ? "userName" : "startedAt";
+	const sortDir = query.sortDir === "asc" ? "asc" : "desc";
 
 	const [members, filterOptions] = await Promise.all([
 		serverTrpcAuthed.membershipMember.adminList.query({
@@ -87,6 +92,8 @@ export default async function OrganizationMembersPage({
 			paymentStatus: query.paymentStatus as "paid" | "pending" | undefined,
 			joinedFrom: query.joinedFrom ? new Date(query.joinedFrom) : undefined,
 			joinedTo: query.joinedTo ? new Date(query.joinedTo) : undefined,
+			sortBy,
+			sortDir,
 			page,
 			pageSize: PAGE_SIZE,
 		}),
@@ -107,7 +114,27 @@ export default async function OrganizationMembersPage({
 		if (query.paymentStatus) params.set("paymentStatus", query.paymentStatus);
 		if (query.joinedFrom) params.set("joinedFrom", query.joinedFrom);
 		if (query.joinedTo) params.set("joinedTo", query.joinedTo);
+		if (query.sortBy) params.set("sortBy", query.sortBy);
+		if (query.sortDir) params.set("sortDir", query.sortDir);
 		params.set("page", String(targetPage));
+		return `?${params}` as Route;
+	}
+
+	function buildSortHref(column: "userName" | "startedAt"): Route {
+		const params = new URLSearchParams();
+		if (query.search) params.set("search", query.search);
+		if (query.status) params.set("status", query.status);
+		if (query.membershipId) params.set("membershipId", query.membershipId);
+		if (query.membershipTierId)
+			params.set("membershipTierId", query.membershipTierId);
+		if (query.paymentStatus) params.set("paymentStatus", query.paymentStatus);
+		if (query.joinedFrom) params.set("joinedFrom", query.joinedFrom);
+		if (query.joinedTo) params.set("joinedTo", query.joinedTo);
+		params.set("sortBy", column);
+		params.set(
+			"sortDir",
+			sortBy === column && sortDir === "desc" ? "asc" : "desc",
+		);
 		return `?${params}` as Route;
 	}
 
@@ -129,7 +156,14 @@ export default async function OrganizationMembersPage({
 				columns={[
 					{
 						id: "member",
-						header: "Member",
+						header: (
+							<SortableHeader
+								label="Member"
+								href={buildSortHref("userName")}
+								active={sortBy === "userName"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => (
 							<div className="space-y-0.5">
 								<div className="font-medium text-foreground">
@@ -167,7 +201,14 @@ export default async function OrganizationMembersPage({
 					},
 					{
 						id: "joined",
-						header: "Joined",
+						header: (
+							<SortableHeader
+								label="Joined"
+								href={buildSortHref("startedAt")}
+								active={sortBy === "startedAt"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => new Date(row.startedAt).toLocaleDateString(),
 					},
 					{

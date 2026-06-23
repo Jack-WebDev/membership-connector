@@ -23,6 +23,7 @@ import {
 import type { Route } from "next";
 import Link from "next/link";
 
+import { SortableHeader } from "@/components/data-table/sortable-header";
 import { requireOrganizationSession } from "@/lib/server-auth";
 import { serverTrpcAuthed } from "@/utils/trpc-server";
 
@@ -49,6 +50,8 @@ type OrganizationFinancesPageProps = {
 		membershipTierId?: string;
 		dateFrom?: string;
 		dateTo?: string;
+		sortBy?: string;
+		sortDir?: string;
 		page?: string;
 	}>;
 };
@@ -79,6 +82,8 @@ export default async function OrganizationFinancesPage({
 
 	const query = await searchParams;
 	const page = Number(query.page) > 0 ? Number(query.page) : 1;
+	const sortBy = query.sortBy === "amount" ? "amount" : "createdAt";
+	const sortDir = query.sortDir === "asc" ? "asc" : "desc";
 
 	const [overview, transactions, filterOptions] = await Promise.all([
 		serverTrpcAuthed.finance.adminDashboard.query({
@@ -111,6 +116,8 @@ export default async function OrganizationFinancesPage({
 			membershipTierId: query.membershipTierId,
 			dateFrom: query.dateFrom ? new Date(query.dateFrom) : undefined,
 			dateTo: query.dateTo ? new Date(query.dateTo) : undefined,
+			sortBy,
+			sortDir,
 			page,
 			pageSize: PAGE_SIZE,
 		}),
@@ -132,7 +139,28 @@ export default async function OrganizationFinancesPage({
 			params.set("membershipTierId", query.membershipTierId);
 		if (query.dateFrom) params.set("dateFrom", query.dateFrom);
 		if (query.dateTo) params.set("dateTo", query.dateTo);
+		if (query.sortBy) params.set("sortBy", query.sortBy);
+		if (query.sortDir) params.set("sortDir", query.sortDir);
 		params.set("page", String(targetPage));
+		return `?${params}` as Route;
+	}
+
+	function buildSortHref(column: "createdAt" | "amount"): Route {
+		const params = new URLSearchParams();
+		if (query.search) params.set("search", query.search);
+		if (query.status) params.set("status", query.status);
+		if (query.type) params.set("type", query.type);
+		if (query.provider) params.set("provider", query.provider);
+		if (query.membershipId) params.set("membershipId", query.membershipId);
+		if (query.membershipTierId)
+			params.set("membershipTierId", query.membershipTierId);
+		if (query.dateFrom) params.set("dateFrom", query.dateFrom);
+		if (query.dateTo) params.set("dateTo", query.dateTo);
+		params.set("sortBy", column);
+		params.set(
+			"sortDir",
+			sortBy === column && sortDir === "desc" ? "asc" : "desc",
+		);
 		return `?${params}` as Route;
 	}
 
@@ -239,7 +267,14 @@ export default async function OrganizationFinancesPage({
 				columns={[
 					{
 						id: "date",
-						header: "Date",
+						header: (
+							<SortableHeader
+								label="Date"
+								href={buildSortHref("createdAt")}
+								active={sortBy === "createdAt"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => new Date(row.createdAt).toLocaleDateString(),
 					},
 					{
@@ -272,7 +307,14 @@ export default async function OrganizationFinancesPage({
 					},
 					{
 						id: "amount",
-						header: "Amount",
+						header: (
+							<SortableHeader
+								label="Amount"
+								href={buildSortHref("amount")}
+								active={sortBy === "amount"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => `${row.currency} ${row.amount}`,
 					},
 					{

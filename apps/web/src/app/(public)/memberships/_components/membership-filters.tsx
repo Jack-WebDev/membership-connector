@@ -8,6 +8,8 @@ import { SearchInput } from "@membership-connector-app/ui/components/search-inpu
 import type { Route } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+
 const BILLING_INTERVAL_OPTIONS = [
 	{ label: "Once-off", value: "once_off" },
 	{ label: "Monthly", value: "monthly" },
@@ -34,11 +36,16 @@ function MembershipFilters({ categories }: { categories: string[] }) {
 		} else {
 			params.delete(key);
 		}
+		params.delete("page");
 
 		router.replace(
 			(params.size > 0 ? `${pathname}?${params}` : pathname) as Route,
 		);
 	}
+
+	const debouncedUpdateSearch = useDebouncedCallback((value: string) =>
+		updateParam("search", value),
+	);
 
 	return (
 		<FilterBar
@@ -76,7 +83,7 @@ function MembershipFilters({ categories }: { categories: string[] }) {
 					<SearchInput
 						placeholder="Search memberships"
 						defaultValue={searchParams.get("search") ?? ""}
-						onChange={(event) => updateParam("search", event.target.value)}
+						onChange={(event) => debouncedUpdateSearch(event.target.value)}
 					/>
 					<FilterBarReset onClick={() => router.replace(pathname as Route)} />
 				</>

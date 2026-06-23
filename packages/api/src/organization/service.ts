@@ -11,9 +11,10 @@ import { and, eq, gte, inArray } from "drizzle-orm";
 
 import { listPublicMemberships } from "../membership/service";
 import type {
+	ListPublicOrganizationsInput,
+	ListPublicOrganizationsResult,
 	OrganizationDashboardOverview,
 	PublicOrganizationDetail,
-	PublicOrganizationSummary,
 } from "./types";
 
 const PENDING_APPLICATION_STATUSES = [
@@ -71,17 +72,24 @@ async function countPublicMembershipsByOrganizationId(): Promise<
 }
 
 export async function listPublicOrganizations(
-	search?: string,
-): Promise<PublicOrganizationSummary[]> {
+	input: ListPublicOrganizationsInput,
+): Promise<ListPublicOrganizationsResult> {
 	const activeOrganizations = await db.query.organizations.findMany({
 		where: eq(organizations.status, "active"),
 	});
 
 	const countsByOrgId = await countPublicMembershipsByOrganizationId();
 
-	return activeOrganizations
-		.filter((organization) => organizationMatchesSearch(organization, search))
-		.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+	const filtered = activeOrganizations
+		.filter((organization) =>
+			organizationMatchesSearch(organization, input.search),
+		)
+		.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+	const total = filtered.length;
+	const start = (input.page - 1) * input.pageSize;
+	const items = filtered
+		.slice(start, start + input.pageSize)
 		.map((organization) => ({
 			id: organization.id,
 			slug: organization.slug,
@@ -89,6 +97,8 @@ export async function listPublicOrganizations(
 			description: organization.description,
 			membershipCount: countsByOrgId.get(organization.id) ?? 0,
 		}));
+
+	return { items, total };
 }
 
 export async function getPublicOrganizationBySlug(
@@ -108,6 +118,8 @@ export async function getPublicOrganizationBySlug(
 	const orgMemberships = await listPublicMemberships({
 		organizationSlug: slug,
 		sort: "newest",
+		page: 1,
+		pageSize: 50,
 	});
 
 	return {
@@ -118,8 +130,8 @@ export async function getPublicOrganizationBySlug(
 		websiteUrl: organization.websiteUrl,
 		email: organization.email,
 		phone: organization.phone,
-		membershipCount: orgMemberships.length,
-		memberships: orgMemberships,
+		membershipCount: orgMemberships.total,
+		memberships: orgMemberships.items,
 	};
 }
 

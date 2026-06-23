@@ -20,6 +20,7 @@ import type {
 	AdminApplicationSummary,
 	ApplicationAnswersInput,
 	ListAdminApplicationsInput,
+	ListMemberApplicationsInput,
 	MemberApplicationDetail,
 	MemberApplicationSummary,
 	RespondToInformationRequestInput,
@@ -459,17 +460,50 @@ export async function respondToInformationRequest(
 
 export async function listMemberApplications(
 	userId: string,
-): Promise<MemberApplicationSummary[]> {
+	input: ListMemberApplicationsInput,
+): Promise<{ items: MemberApplicationSummary[]; total: number }> {
 	const rows = await db.query.membershipApplications.findMany({
 		where: eq(membershipApplications.userId, userId),
 		with: {
 			membership: { with: { organization: true } },
 			membershipTier: true,
 		},
-		orderBy: (table, { desc }) => desc(table.updatedAt),
 	});
 
-	return rows.map(toSummary);
+	const search = input.search?.trim().toLowerCase();
+
+	const filtered = rows
+		.filter((row) => !input.status || row.status === input.status)
+		.filter((row) => {
+			if (!search) return true;
+
+			const haystack = [
+				row.membership.name,
+				row.membership.organization.name,
+				row.membershipTier.name,
+			]
+				.join(" ")
+				.toLowerCase();
+
+			return haystack.includes(search);
+		})
+		.sort((a, b) => {
+			const direction = input.sortDir === "asc" ? 1 : -1;
+
+			if (input.sortBy === "submittedAt") {
+				const aTime = a.submittedAt?.getTime() ?? 0;
+				const bTime = b.submittedAt?.getTime() ?? 0;
+				return (aTime - bTime) * direction;
+			}
+
+			return (a.updatedAt.getTime() - b.updatedAt.getTime()) * direction;
+		});
+
+	const total = filtered.length;
+	const start = (input.page - 1) * input.pageSize;
+	const page = filtered.slice(start, start + input.pageSize);
+
+	return { items: page.map(toSummary), total };
 }
 
 export async function getMemberApplicationDetail(
@@ -635,7 +669,17 @@ export async function listApplicationsForReview(
 
 			return haystack.includes(search);
 		})
-		.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+		.sort((a, b) => {
+			const direction = input.sortDir === "asc" ? 1 : -1;
+
+			if (input.sortBy === "submittedAt") {
+				const aTime = a.submittedAt?.getTime() ?? 0;
+				const bTime = b.submittedAt?.getTime() ?? 0;
+				return (aTime - bTime) * direction;
+			}
+
+			return (a.updatedAt.getTime() - b.updatedAt.getTime()) * direction;
+		});
 
 	const total = filtered.length;
 	const start = (input.page - 1) * input.pageSize;

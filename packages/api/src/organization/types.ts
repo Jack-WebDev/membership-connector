@@ -4,10 +4,17 @@ import type { PublicMembershipSummary } from "../membership/types";
 
 export const listPublicOrganizationsInput = z.object({
 	search: z.string().trim().max(160).optional(),
+	page: z.coerce.number().int().min(1).default(1),
+	pageSize: z.coerce.number().int().min(1).max(50).default(12),
 });
 export type ListPublicOrganizationsInput = z.infer<
 	typeof listPublicOrganizationsInput
 >;
+
+export type ListPublicOrganizationsResult = {
+	items: PublicOrganizationSummary[];
+	total: number;
+};
 
 export const getPublicOrganizationInput = z.object({
 	organizationSlug: z.string().trim().min(1).max(160),

@@ -23,6 +23,7 @@ import type {
 	CreateMembershipInput,
 	ListAdminMembershipsInput,
 	ListPublicMembershipsInput,
+	ListPublicMembershipsResult,
 	PublicMembershipDetail,
 	PublicMembershipSummary,
 	UpdateMembershipInput,
@@ -114,7 +115,7 @@ async function findEligiblePublishedMemberships(): Promise<
 
 export async function listPublicMemberships(
 	input: ListPublicMembershipsInput,
-): Promise<PublicMembershipSummary[]> {
+): Promise<ListPublicMembershipsResult> {
 	const eligible = await findEligiblePublishedMemberships();
 
 	const filtered = eligible
@@ -140,7 +141,11 @@ export async function listPublicMemberships(
 		(a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
 	);
 
-	return sorted.slice(0, input.limit ?? sorted.length).map(toSummary);
+	const total = sorted.length;
+	const start = (input.page - 1) * input.pageSize;
+	const items = sorted.slice(start, start + input.pageSize).map(toSummary);
+
+	return { items, total };
 }
 
 export async function listPublicMembershipFilterOptions(): Promise<{
@@ -492,7 +497,15 @@ export async function listAdminMemberships(
 		.filter((row) => !input.status || row.status === input.status)
 		.filter((row) => !input.visibility || row.visibility === input.visibility)
 		.filter((row) => membershipMatchesSearch(row, "", input.search))
-		.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+		.sort((a, b) => {
+			const direction = input.sortDir === "asc" ? 1 : -1;
+
+			if (input.sortBy === "name") {
+				return a.name.localeCompare(b.name) * direction;
+			}
+
+			return (a.updatedAt.getTime() - b.updatedAt.getTime()) * direction;
+		});
 
 	const total = filtered.length;
 	const start = (input.page - 1) * input.pageSize;

@@ -17,6 +17,7 @@ import { PlusIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 
+import { SortableHeader } from "@/components/data-table/sortable-header";
 import { requireOrganizationSession } from "@/lib/server-auth";
 import { serverTrpcAuthed } from "@/utils/trpc-server";
 
@@ -37,6 +38,8 @@ type MembershipTiersPageProps = {
 		search?: string;
 		status?: string;
 		membershipId?: string;
+		sortBy?: string;
+		sortDir?: string;
 		page?: string;
 	}>;
 };
@@ -62,6 +65,11 @@ export default async function MembershipTiersPage({
 
 	const query = await searchParams;
 	const page = Number(query.page) > 0 ? Number(query.page) : 1;
+	const sortBy =
+		query.sortBy === "name" || query.sortBy === "price"
+			? query.sortBy
+			: "sortOrder";
+	const sortDir = query.sortDir === "desc" ? "desc" : "asc";
 
 	const [tiers, stats, membershipOptions] = await Promise.all([
 		serverTrpcAuthed.membershipTier.adminList.query({
@@ -69,6 +77,8 @@ export default async function MembershipTiersPage({
 			search: query.search,
 			status: query.status as "active" | "inactive" | "archived" | undefined,
 			membershipId: query.membershipId,
+			sortBy,
+			sortDir,
 			page,
 			pageSize: PAGE_SIZE,
 		}),
@@ -87,7 +97,22 @@ export default async function MembershipTiersPage({
 		if (query.search) params.set("search", query.search);
 		if (query.status) params.set("status", query.status);
 		if (query.membershipId) params.set("membershipId", query.membershipId);
+		if (query.sortBy) params.set("sortBy", query.sortBy);
+		if (query.sortDir) params.set("sortDir", query.sortDir);
 		params.set("page", String(targetPage));
+		return `?${params}` as Route;
+	}
+
+	function buildSortHref(column: "name" | "price"): Route {
+		const params = new URLSearchParams();
+		if (query.search) params.set("search", query.search);
+		if (query.status) params.set("status", query.status);
+		if (query.membershipId) params.set("membershipId", query.membershipId);
+		params.set("sortBy", column);
+		params.set(
+			"sortDir",
+			sortBy === column && sortDir === "asc" ? "desc" : "asc",
+		);
 		return `?${params}` as Route;
 	}
 
@@ -122,7 +147,14 @@ export default async function MembershipTiersPage({
 				columns={[
 					{
 						id: "name",
-						header: "Tier",
+						header: (
+							<SortableHeader
+								label="Tier"
+								href={buildSortHref("name")}
+								active={sortBy === "name"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) => (
 							<div className="space-y-0.5">
 								<div className="font-medium text-foreground">{row.name}</div>
@@ -134,7 +166,14 @@ export default async function MembershipTiersPage({
 					},
 					{
 						id: "price",
-						header: "Price",
+						header: (
+							<SortableHeader
+								label="Price"
+								href={buildSortHref("price")}
+								active={sortBy === "price"}
+								direction={sortDir}
+							/>
+						),
 						cell: (row) =>
 							row.billingInterval === "free"
 								? "Free"

@@ -17,6 +17,7 @@ import {
 import {
 	changeMemberTierInput,
 	listAdminMembersInput,
+	listMemberMembershipsInput,
 	memberIdInput,
 	membershipIdInput,
 	updateMemberNotesInput,
@@ -24,9 +25,11 @@ import {
 } from "./types";
 
 export const membershipMemberRouter = router({
-	listMine: memberProcedure.query(({ ctx }) =>
-		listActiveMembershipsForUser(ctx.session.user.id),
-	),
+	listMine: memberProcedure
+		.input(listMemberMembershipsInput)
+		.query(({ ctx, input }) =>
+			listActiveMembershipsForUser(ctx.session.user.id, input),
+		),
 
 	getMine: memberProcedure
 		.input(membershipIdInput)

@@ -26,20 +26,20 @@ export default async function MemberDashboardPage() {
 			serverTrpcAuthed.announcement.listRecentForUser.query(),
 			serverTrpcAuthed.membership.listPublic.query({
 				sort: "newest",
-				limit: 3,
+				pageSize: 3,
 			}),
-			serverTrpcAuthed.membershipApplication.listMine.query(),
-			serverTrpcAuthed.membershipMember.listMine.query(),
+			serverTrpcAuthed.membershipApplication.listMine.query({}),
+			serverTrpcAuthed.membershipMember.listMine.query({}),
 		]);
 
 	const activity = [
-		...applications.map((application) => ({
+		...applications.items.map((application) => ({
 			id: `application-${application.id}`,
 			label: `${application.membershipName} application ${application.status.replace("_", " ")}`,
 			timestamp: application.updatedAt,
 			href: `/member/applications/${application.id}` as Route,
 		})),
-		...memberships.map((membership) => ({
+		...memberships.items.map((membership) => ({
 			id: `membership-${membership.id}`,
 			label: `${membership.membershipName} membership ${membership.status.replace("_", " ")}`,
 			timestamp: membership.startedAt,
@@ -123,9 +123,9 @@ export default async function MemberDashboardPage() {
 						<h2 className="font-(family-name:--font-display) text-2xl text-foreground">
 							Recommended for you
 						</h2>
-						{recommended.length > 0 ? (
+						{recommended.items.length > 0 ? (
 							<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-								{recommended.map((membership) => (
+								{recommended.items.map((membership) => (
 									<MembershipCard
 										key={membership.id}
 										{...toMembershipCardProps(membership, {

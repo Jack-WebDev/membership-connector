@@ -41,8 +41,8 @@ export default async function HomePage() {
 		serverTrpc.organization.listPublic.query({}),
 	]);
 
-	const featuredMemberships = memberships.slice(0, FEATURED_COUNT);
-	const featuredOrganizations = organizations.slice(0, FEATURED_COUNT);
+	const featuredMemberships = memberships.items.slice(0, FEATURED_COUNT);
+	const featuredOrganizations = organizations.items.slice(0, FEATURED_COUNT);
 
 	return (
 		<div className="space-y-14 pb-10">
