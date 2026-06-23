@@ -1,10 +1,8 @@
 import { db } from "@membership-connector-app/db";
 import {
 	announcementComments,
-	announcementLikes,
 	announcements,
 } from "@membership-connector-app/db/schema/announcement";
-import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import {
 	membershipMembers,
 	memberships,
@@ -14,6 +12,18 @@ import type { DbExecutor } from "@membership-connector-app/db/types";
 import { TRPCError } from "@trpc/server";
 import { and, eq, inArray } from "drizzle-orm";
 
+import { recordAuditLog } from "../audit-log/service";
+import {
+	findParentComment,
+	insertComment,
+	listAnnouncementCommentsForAdmin,
+	listVisibleCommentsForAnnouncement,
+} from "../comment/service";
+import {
+	addAnnouncementLike,
+	findAnnouncementLikeForUser,
+	removeAnnouncementLike,
+} from "../like/service";
 import { findOrganizationMembershipOrThrow } from "../membership/service";
 import {
 	createNotification,
@@ -232,25 +242,18 @@ export async function toggleAnnouncementLike(
 			announcementId,
 		);
 
-		const existing = await tx.query.announcementLikes.findFirst({
-			where: and(
-				eq(announcementLikes.announcementId, announcementId),
-				eq(announcementLikes.userId, userId),
-			),
-		});
+		const existing = await findAnnouncementLikeForUser(
+			tx,
+			announcementId,
+			userId,
+		);
 
 		if (existing) {
-			await tx
-				.delete(announcementLikes)
-				.where(eq(announcementLikes.id, existing.id));
+			await removeAnnouncementLike(tx, existing.id);
 			return { liked: false };
 		}
 
-		await tx.insert(announcementLikes).values({
-			id: crypto.randomUUID(),
-			announcementId,
-			userId,
-		});
+		await addAnnouncementLike(tx, announcementId, userId);
 
 		await notifyOrganizationAdmins(
 			tx,
@@ -274,24 +277,7 @@ export async function listCommentsForMember(
 ): Promise<MemberCommentSummary[]> {
 	await findViewableAnnouncementForMember(db, userId, announcementId);
 
-	const rows = await db.query.announcementComments.findMany({
-		where: and(
-			eq(announcementComments.announcementId, announcementId),
-			eq(announcementComments.status, "visible"),
-		),
-		with: { user: true },
-		orderBy: (table, { asc }) => asc(table.createdAt),
-	});
-
-	return rows.map((row) => ({
-		id: row.id,
-		authorUserId: row.userId,
-		authorName: row.user.name,
-		body: row.body,
-		status: row.status,
-		createdAt: row.createdAt,
-		parentCommentId: row.parentCommentId,
-	}));
+	return listVisibleCommentsForAnnouncement(db, announcementId);
 }
 
 export async function addComment(
@@ -305,42 +291,15 @@ export async function addComment(
 			input.announcementId,
 		);
 
-		let parentComment:
-			| Awaited<ReturnType<typeof tx.query.announcementComments.findFirst>>
-			| undefined;
+		const parentComment = input.parentCommentId
+			? await findParentComment(tx, input.announcementId, input.parentCommentId)
+			: undefined;
 
-		if (input.parentCommentId) {
-			parentComment = await tx.query.announcementComments.findFirst({
-				where: eq(announcementComments.id, input.parentCommentId),
-			});
-
-			if (
-				!parentComment ||
-				parentComment.announcementId !== input.announcementId
-			) {
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Comment not found",
-				});
-			}
-
-			if (parentComment.parentCommentId) {
-				throw new TRPCError({
-					code: "BAD_REQUEST",
-					message: "Replies can only be one level deep",
-				});
-			}
-		}
-
-		const commentId = crypto.randomUUID();
-
-		await tx.insert(announcementComments).values({
-			id: commentId,
+		const { commentId } = await insertComment(tx, {
 			announcementId: input.announcementId,
 			userId,
-			parentCommentId: input.parentCommentId ?? null,
+			parentCommentId: input.parentCommentId,
 			body: input.body,
-			status: "visible",
 		});
 
 		await notifyOrganizationAdmins(
@@ -366,47 +325,6 @@ export async function addComment(
 		}
 
 		return { commentId };
-	});
-}
-
-export async function deleteOwnComment(
-	userId: string,
-	commentId: string,
-): Promise<void> {
-	await db.transaction(async (tx) => {
-		const comment = await tx.query.announcementComments.findFirst({
-			where: and(
-				eq(announcementComments.id, commentId),
-				eq(announcementComments.userId, userId),
-			),
-			with: { announcement: true },
-		});
-
-		if (!comment) {
-			throw new TRPCError({
-				code: "NOT_FOUND",
-				message: "Comment not found",
-			});
-		}
-
-		if (comment.status === "deleted") {
-			return;
-		}
-
-		await tx
-			.update(announcementComments)
-			.set({ status: "deleted" })
-			.where(eq(announcementComments.id, commentId));
-
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
-			organizationId: comment.announcement.organizationId,
-			actorUserId: userId,
-			action: "comment.deleted",
-			entityType: "announcement_comment",
-			entityId: commentId,
-			metadata: { announcementId: comment.announcementId },
-		});
 	});
 }
 
@@ -525,8 +443,7 @@ export async function createAnnouncement(
 			status: "draft",
 		});
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "announcement.created",
@@ -579,8 +496,7 @@ export async function updateAnnouncement(
 			})
 			.where(eq(announcements.id, input.announcementId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "announcement.updated",
@@ -624,8 +540,7 @@ export async function transitionAnnouncementStatus(
 			})
 			.where(eq(announcements.id, announcementId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: `announcement.${target}`,
@@ -687,8 +602,7 @@ export async function toggleAnnouncementPin(
 			.set({ pinned })
 			.where(eq(announcements.id, announcementId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: pinned ? "announcement.pinned" : "announcement.unpinned",
@@ -778,64 +692,7 @@ export async function listCommentsForAnnouncementAdmin(
 ): Promise<AdminCommentSummary[]> {
 	await findOrganizationAnnouncementOrThrow(db, organizationId, announcementId);
 
-	const rows = await db.query.announcementComments.findMany({
-		where: eq(announcementComments.announcementId, announcementId),
-		with: { user: true },
-		orderBy: (table, { asc }) => asc(table.createdAt),
-	});
-
-	return rows.map((row) => ({
-		id: row.id,
-		authorUserId: row.userId,
-		authorName: row.user.name,
-		body: row.body,
-		status: row.status,
-		createdAt: row.createdAt,
-		parentCommentId: row.parentCommentId,
-	}));
-}
-
-export async function setCommentStatus(
-	organizationId: string,
-	userId: string,
-	commentId: string,
-	target: "visible" | "hidden",
-): Promise<void> {
-	await db.transaction(async (tx) => {
-		const comment = await tx.query.announcementComments.findFirst({
-			where: eq(announcementComments.id, commentId),
-			with: { announcement: true },
-		});
-
-		if (!comment || comment.announcement.organizationId !== organizationId) {
-			throw new TRPCError({
-				code: "NOT_FOUND",
-				message: "Comment not found",
-			});
-		}
-
-		if (comment.status === "deleted") {
-			throw new TRPCError({
-				code: "BAD_REQUEST",
-				message: "Deleted comments cannot be moderated",
-			});
-		}
-
-		await tx
-			.update(announcementComments)
-			.set({ status: target })
-			.where(eq(announcementComments.id, commentId));
-
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
-			organizationId,
-			actorUserId: userId,
-			action: target === "hidden" ? "comment.hidden" : "comment.unhidden",
-			entityType: "announcement_comment",
-			entityId: commentId,
-			metadata: { announcementId: comment.announcementId },
-		});
-	});
+	return listAnnouncementCommentsForAdmin(db, announcementId);
 }
 
 export type { AnnouncementStatus };

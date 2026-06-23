@@ -3,7 +3,6 @@ import {
 	accountRoles,
 	userProfiles,
 } from "@membership-connector-app/db/schema/account";
-import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import {
 	organizationAdmins,
 	organizations,
@@ -12,6 +11,7 @@ import type { DbExecutor } from "@membership-connector-app/db/types";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 
+import { recordAuditLog } from "../audit-log/service";
 import type {
 	MemberOnboardingInput,
 	OrganizationOnboardingInput,
@@ -100,8 +100,7 @@ export async function completeOrganizationOnboarding(
 			invitedByUserId: null,
 		});
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "organization.created",

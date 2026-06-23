@@ -1,5 +1,4 @@
 import { db } from "@membership-connector-app/db";
-import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import {
 	memberships,
 	membershipTiers,
@@ -9,6 +8,7 @@ import type { DbExecutor } from "@membership-connector-app/db/types";
 import { TRPCError } from "@trpc/server";
 import { and, eq, ne } from "drizzle-orm";
 
+import { recordAuditLog } from "../audit-log/service";
 import {
 	type ActiveTier,
 	findStartingTier,
@@ -380,8 +380,7 @@ export async function createMembership(
 			membersOnlyContentEnabled: input.membersOnlyContentEnabled,
 		});
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "membership.created",
@@ -432,8 +431,7 @@ export async function updateMembership(
 			})
 			.where(eq(memberships.id, input.membershipId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "membership.updated",
@@ -472,8 +470,7 @@ export async function transitionMembershipStatus(
 			.set({ status: target })
 			.where(eq(memberships.id, membershipId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: `membership.${target}`,

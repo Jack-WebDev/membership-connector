@@ -1,5 +1,4 @@
 import { db } from "@membership-connector-app/db";
-import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import {
 	membershipApplications,
 	membershipMembers,
@@ -10,6 +9,7 @@ import type { DbExecutor } from "@membership-connector-app/db/types";
 import { TRPCError } from "@trpc/server";
 import { and, eq, inArray, ne } from "drizzle-orm";
 
+import { recordAuditLog } from "../audit-log/service";
 import {
 	createNotification,
 	notifyOrganizationAdmins,
@@ -335,8 +335,7 @@ export async function submitApplication(
 			});
 		}
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId: membership.organizationId,
 			actorUserId: userId,
 			action: "application.submitted",
@@ -391,8 +390,7 @@ export async function withdrawApplication(
 			.set({ status: "withdrawn" })
 			.where(eq(membershipApplications.id, applicationId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId: application.organizationId,
 			actorUserId: userId,
 			action: "application.withdrawn",
@@ -434,8 +432,7 @@ export async function respondToInformationRequest(
 			})
 			.where(eq(membershipApplications.id, input.applicationId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId: application.organizationId,
 			actorUserId: userId,
 			action: "application.resubmitted",
@@ -741,8 +738,7 @@ export async function markApplicationUnderReview(
 			.set({ status: "under_review" })
 			.where(eq(membershipApplications.id, applicationId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "application.under_review",
@@ -827,8 +823,7 @@ export async function approveApplication(
 			})
 			.where(eq(membershipApplications.id, applicationId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "application.approved",
@@ -899,8 +894,7 @@ export async function rejectApplication(
 			})
 			.where(eq(membershipApplications.id, applicationId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "application.rejected",
@@ -956,8 +950,7 @@ export async function requestApplicationInformation(
 			})
 			.where(eq(membershipApplications.id, applicationId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "application.needs_information",
@@ -1011,8 +1004,7 @@ export async function markApplicationPaymentReceived(
 			.set({ status: "active" })
 			.where(eq(membershipMembers.id, member.id));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "membership.payment_received",

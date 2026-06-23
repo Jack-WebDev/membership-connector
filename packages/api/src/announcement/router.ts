@@ -1,3 +1,4 @@
+import { deleteOwnComment, setCommentStatus } from "../comment/service";
 import { router } from "../index";
 import {
 	memberProcedure,
@@ -6,7 +7,6 @@ import {
 import {
 	addComment,
 	createAnnouncement,
-	deleteOwnComment,
 	getAdminAnnouncementById,
 	listAdminAnnouncements,
 	listAnnouncementFilterOptions,
@@ -14,7 +14,6 @@ import {
 	listCommentsForMember,
 	listRecentAnnouncementsForUser,
 	listVisibleAnnouncementsForMembershipMember,
-	setCommentStatus,
 	toggleAnnouncementLike,
 	toggleAnnouncementPin,
 	transitionAnnouncementStatus,

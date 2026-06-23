@@ -1,6 +1,5 @@
 import { db } from "@membership-connector-app/db";
 import { announcementComments } from "@membership-connector-app/db/schema/announcement";
-import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import { financeTransactions } from "@membership-connector-app/db/schema/finance";
 import {
 	membershipApplications,
@@ -12,6 +11,7 @@ import type { DbExecutor } from "@membership-connector-app/db/types";
 import { TRPCError } from "@trpc/server";
 import { and, eq, inArray } from "drizzle-orm";
 
+import { recordAuditLog } from "../audit-log/service";
 import { createNotification } from "../notification/service";
 import type {
 	AdminMemberDetail,
@@ -453,8 +453,7 @@ export async function updateMemberStatus(
 			})
 			.where(eq(membershipMembers.id, memberId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: `member.${target}`,
@@ -518,8 +517,7 @@ export async function changeMemberTier(
 			.set({ membershipTierId })
 			.where(eq(membershipMembers.id, memberId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "member.tier_changed",
@@ -552,8 +550,7 @@ export async function updateMemberNotes(
 			.set({ notes: notes.length > 0 ? notes : null })
 			.where(eq(membershipMembers.id, memberId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "member.notes_updated",

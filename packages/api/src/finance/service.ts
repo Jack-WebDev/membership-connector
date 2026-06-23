@@ -1,5 +1,4 @@
 import { db } from "@membership-connector-app/db";
-import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import { financeTransactions } from "@membership-connector-app/db/schema/finance";
 import {
 	membershipMembers,
@@ -9,6 +8,7 @@ import type { DbExecutor } from "@membership-connector-app/db/types";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 
+import { recordAuditLog } from "../audit-log/service";
 import { findOrganizationMembershipOrThrow } from "../membership/service";
 import { listMemberFilterOptions } from "../membership-member/service";
 import {
@@ -305,8 +305,7 @@ export async function createFinanceTransaction(
 			description: input.description ?? null,
 		});
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId,
 			action: "finance.created",

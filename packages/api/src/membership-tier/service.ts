@@ -1,10 +1,10 @@
 import { db } from "@membership-connector-app/db";
-import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import { membershipTiers } from "@membership-connector-app/db/schema/membership";
 import type { DbExecutor } from "@membership-connector-app/db/types";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 
+import { recordAuditLog } from "../audit-log/service";
 import { findOrganizationMembershipOrThrow } from "../membership/service";
 import type {
 	AdminTierDetail,
@@ -124,8 +124,7 @@ export async function createMembershipTier(
 			sortOrder: nextSortOrder,
 		});
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "membership_tier.created",
@@ -175,8 +174,7 @@ export async function updateMembershipTier(
 			})
 			.where(eq(membershipTiers.id, input.tierId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "membership_tier.updated",
@@ -209,8 +207,7 @@ export async function toggleMembershipTierActive(
 			.set({ status: nextStatus })
 			.where(eq(membershipTiers.id, tierId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: `membership_tier.${nextStatus}`,
@@ -241,8 +238,7 @@ export async function archiveMembershipTier(
 			.set({ status: "archived" })
 			.where(eq(membershipTiers.id, tierId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId: userId,
 			action: "membership_tier.archived",

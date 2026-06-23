@@ -1,10 +1,10 @@
 import { db } from "@membership-connector-app/db";
-import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import { user } from "@membership-connector-app/db/schema/auth";
 import { organizationAdmins } from "@membership-connector-app/db/schema/organization";
 import { TRPCError } from "@trpc/server";
 import { and, eq, ne } from "drizzle-orm";
 
+import { recordAuditLog } from "../audit-log/service";
 import {
 	createNotification,
 	notifyOrganizationAdmins,
@@ -116,8 +116,7 @@ export async function inviteAdmin(
 			});
 		}
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId,
 			action: "admin.invited",
@@ -183,8 +182,7 @@ export async function changeAdminRole(
 			.set({ role })
 			.where(eq(organizationAdmins.id, adminId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId,
 			action: "admin.role_changed",
@@ -234,8 +232,7 @@ export async function removeAdmin(
 			.set({ status: "removed" })
 			.where(eq(organizationAdmins.id, adminId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId,
 			action:
@@ -284,8 +281,7 @@ export async function resendInvite(
 			});
 		}
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId,
 			actorUserId,
 			action: "admin.invite_resent",
@@ -329,8 +325,7 @@ export async function acceptInvite(
 			.set({ status: "active" })
 			.where(eq(organizationAdmins.id, adminId));
 
-		await tx.insert(auditLogs).values({
-			id: crypto.randomUUID(),
+		await recordAuditLog(tx, {
 			organizationId: row.organizationId,
 			actorUserId: userId,
 			action: "admin.invite_accepted",
