@@ -200,6 +200,7 @@ export const membershipMembers = pgTable(
 		startedAt: timestamp("started_at").notNull().defaultNow(),
 		expiresAt: timestamp("expires_at"),
 		cancelledAt: timestamp("cancelled_at"),
+		notes: text("notes"),
 		...timestamps,
 	},
 	(table) => [

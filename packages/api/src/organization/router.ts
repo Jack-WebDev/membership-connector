@@ -1,7 +1,9 @@
 import { TRPCError } from "@trpc/server";
 
 import { publicProcedure, router } from "../index";
+import { organizationPermissionProcedure } from "../procedures";
 import {
+	getOrganizationDashboardOverview,
 	getPublicOrganizationBySlug,
 	listPublicOrganizations,
 } from "./service";
@@ -31,4 +33,10 @@ export const organizationRouter = router({
 
 			return organization;
 		}),
+
+	adminDashboard: organizationPermissionProcedure(
+		"view_organization_dashboard",
+	).query(({ ctx }) =>
+		getOrganizationDashboardOverview(ctx.organization.organizationId),
+	),
 });

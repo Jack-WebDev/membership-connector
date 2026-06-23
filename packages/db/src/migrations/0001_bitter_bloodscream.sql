@@ -1,0 +1,1 @@
+ALTER TABLE "membership_members" ADD COLUMN "notes" text;

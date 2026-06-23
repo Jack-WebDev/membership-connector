@@ -30,3 +30,51 @@ export type PublicOrganizationDetail = PublicOrganizationSummary & {
 	phone: string | null;
 	memberships: PublicMembershipSummary[];
 };
+
+export type OrganizationDashboardRecentApplication = {
+	id: string;
+	applicantName: string;
+	membershipName: string;
+	status: string;
+	submittedAt: Date | null;
+};
+
+export type OrganizationDashboardRecentMember = {
+	id: string;
+	userName: string;
+	membershipName: string;
+	status: string;
+	startedAt: Date;
+};
+
+export type OrganizationDashboardRecentComment = {
+	id: string;
+	userName: string;
+	announcementTitle: string;
+	body: string;
+	createdAt: Date;
+};
+
+export type OrganizationDashboardRecentFinanceRecord = {
+	id: string;
+	amount: string;
+	currency: string;
+	status: string;
+	type: string;
+	createdAt: Date;
+};
+
+export type OrganizationDashboardOverview = {
+	activeMembers: number;
+	pendingApplications: number;
+	approvedApplications: number;
+	rejectedApplications: number;
+	publishedMemberships: number;
+	pausedMemberships: number;
+	monthlyRevenue: string;
+	currency: string;
+	recentApplications: OrganizationDashboardRecentApplication[];
+	recentMembers: OrganizationDashboardRecentMember[];
+	recentComments: OrganizationDashboardRecentComment[];
+	recentFinanceRecords: OrganizationDashboardRecentFinanceRecord[];
+};
