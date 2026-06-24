@@ -9,11 +9,15 @@ import {
 import { organizations } from "@membership-connector-app/db/schema/organization";
 import { and, eq, gte, inArray } from "drizzle-orm";
 
+import { recordAuditLog } from "../audit-log/service";
+import { notFoundError } from "../errors";
 import { listPublicMemberships } from "../membership/service";
 import type {
 	ListPublicOrganizationsInput,
 	ListPublicOrganizationsResult,
+	OrganizationAdminDetail,
 	OrganizationDashboardOverview,
+	OrganizationUpdateInput,
 	PublicOrganizationDetail,
 } from "./types";
 
@@ -133,6 +137,55 @@ export async function getPublicOrganizationBySlug(
 		membershipCount: orgMemberships.total,
 		memberships: orgMemberships.items,
 	};
+}
+
+export async function getOrganizationForAdmin(
+	organizationId: string,
+): Promise<OrganizationAdminDetail> {
+	const organization = await db.query.organizations.findFirst({
+		where: eq(organizations.id, organizationId),
+	});
+
+	if (!organization) {
+		throw notFoundError("Organization not found");
+	}
+
+	return {
+		id: organization.id,
+		name: organization.name,
+		description: organization.description,
+		websiteUrl: organization.websiteUrl,
+		email: organization.email,
+		phone: organization.phone,
+	};
+}
+
+export async function updateOrganization(
+	organizationId: string,
+	userId: string,
+	input: OrganizationUpdateInput,
+): Promise<void> {
+	await db.transaction(async (tx) => {
+		await tx
+			.update(organizations)
+			.set({
+				name: input.name,
+				description: input.description ? input.description : null,
+				websiteUrl: input.websiteUrl ? input.websiteUrl : null,
+				email: input.email ? input.email : null,
+				phone: input.phone ? input.phone : null,
+			})
+			.where(eq(organizations.id, organizationId));
+
+		await recordAuditLog(tx, {
+			organizationId,
+			actorUserId: userId,
+			action: "organization.updated",
+			entityType: "organization",
+			entityId: organizationId,
+			metadata: { name: input.name },
+		});
+	});
 }
 
 function startOfCurrentMonth(): Date {

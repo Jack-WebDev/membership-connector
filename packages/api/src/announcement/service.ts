@@ -255,6 +255,14 @@ export async function toggleAnnouncementLike(
 
 		await addAnnouncementLike(tx, announcementId, userId);
 
+		await recordAuditLog(tx, {
+			organizationId: announcement.organizationId,
+			actorUserId: userId,
+			action: "announcement.liked",
+			entityType: "announcement",
+			entityId: announcementId,
+		});
+
 		await notifyOrganizationAdmins(
 			tx,
 			announcement.organizationId,
@@ -300,6 +308,15 @@ export async function addComment(
 			userId,
 			parentCommentId: input.parentCommentId,
 			body: input.body,
+		});
+
+		await recordAuditLog(tx, {
+			organizationId: announcement.organizationId,
+			actorUserId: userId,
+			action: "comment.created",
+			entityType: "comment",
+			entityId: commentId,
+			metadata: { announcementId: input.announcementId },
 		});
 
 		await notifyOrganizationAdmins(

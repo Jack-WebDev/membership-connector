@@ -38,6 +38,38 @@ export type PublicOrganizationDetail = PublicOrganizationSummary & {
 	memberships: PublicMembershipSummary[];
 };
 
+const optionalEmail = z
+	.string()
+	.trim()
+	.refine((value) => value === "" || z.email().safeParse(value).success, {
+		message: "Invalid email address",
+	});
+
+const optionalUrl = z
+	.string()
+	.trim()
+	.refine((value) => value === "" || z.url().safeParse(value).success, {
+		message: "Invalid URL",
+	});
+
+export const organizationUpdateInput = z.object({
+	name: z.string().trim().min(2, "Organization name is required").max(160),
+	description: z.string().trim().max(2000),
+	websiteUrl: optionalUrl,
+	email: optionalEmail,
+	phone: z.string().trim().max(32),
+});
+export type OrganizationUpdateInput = z.infer<typeof organizationUpdateInput>;
+
+export type OrganizationAdminDetail = {
+	id: string;
+	name: string;
+	description: string | null;
+	websiteUrl: string | null;
+	email: string | null;
+	phone: string | null;
+};
+
 export type OrganizationDashboardRecentApplication = {
 	id: string;
 	applicantName: string;

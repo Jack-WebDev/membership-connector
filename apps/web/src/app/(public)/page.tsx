@@ -3,6 +3,7 @@ import { EmptyState } from "@membership-connector-app/ui/components/empty-state"
 import { MembershipCard } from "@membership-connector-app/ui/components/membership-card";
 import { OrganizationCard } from "@membership-connector-app/ui/components/organization-card";
 import { PageHeader } from "@membership-connector-app/ui/components/page-header";
+import { SearchInput } from "@membership-connector-app/ui/components/search-input";
 import { SectionHeader } from "@membership-connector-app/ui/components/section-header";
 import Link from "next/link";
 
@@ -49,19 +50,24 @@ export default async function HomePage() {
 			<PageHeader
 				align="center"
 				eyebrow="Welcome"
-				title="Find a club or group you'll love, and join in a few clicks."
-				description="Membership Connector helps you discover trusted clubs, associations, and communities near you — and sign up without any fuss. No tech experience needed."
+				title="Find a club or group you'll love"
+				description="Search thousands of clubs and community groups, or browse by category. Joining takes just a few minutes — no computer experience needed."
 				actions={
-					<>
-						<Link href="/memberships">
-							<Button size="lg">Browse memberships</Button>
-						</Link>
-						<Link href="/auth/login">
-							<Button size="lg" variant="outline">
-								Already a member? Log in
-							</Button>
-						</Link>
-					</>
+					<form
+						action="/memberships"
+						method="GET"
+						className="flex w-full max-w-xl flex-col items-center gap-3 sm:flex-row"
+					>
+						<SearchInput
+							name="search"
+							placeholder="Search by club name, e.g. 'gardening' or 'bowls'"
+							className="w-full sm:flex-1"
+							aria-label="Search memberships"
+						/>
+						<Button type="submit" size="lg" className="w-full sm:w-auto">
+							Browse all memberships
+						</Button>
+					</form>
 				}
 			/>
 
@@ -115,13 +121,20 @@ export default async function HomePage() {
 						description="Organizations will appear here once they publish a membership."
 					/>
 				)}
+				<div className="flex justify-center">
+					<Link href="/organizations">
+						<Button size="lg" variant="outline">
+							See all groups
+						</Button>
+					</Link>
+				</div>
 			</section>
 
 			<section className="fade-in slide-in-from-bottom-4 animate-in space-y-6 fill-mode-both delay-200 duration-700">
 				<SectionHeader
-					eyebrow="Memberships"
-					title="Popular memberships to get you started"
-					description="Each membership shows you the price and what's included before you join."
+					eyebrow="Get started"
+					title="A few memberships to get you started"
+					description="Each one shows the price and what's included before you join."
 				/>
 				{featuredMemberships.length > 0 ? (
 					<div className="grid gap-6 lg:grid-cols-2">
@@ -140,23 +153,10 @@ export default async function HomePage() {
 						description="Published memberships will show up here as soon as they're live."
 					/>
 				)}
-			</section>
-
-			<section className="fade-in slide-in-from-bottom-4 animate-in rounded-[calc(var(--radius)*1.25)] border border-border/80 bg-card/90 fill-mode-both p-8 text-center shadow-[var(--shadow-soft)] delay-300 duration-700 sm:p-10">
-				<h2 className="font-(family-name:--font-display) text-3xl text-foreground">
-					Not sure where to start? We're happy to help.
-				</h2>
-				<p className="mx-auto mt-3 max-w-xl text-base text-muted-foreground leading-7">
-					Browse at your own pace, or create a free account now — you can always
-					ask for help once you're signed in.
-				</p>
-				<div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-					<Link href="/auth/register">
-						<Button size="lg">Create a free account</Button>
-					</Link>
+				<div className="flex justify-center">
 					<Link href="/memberships">
 						<Button size="lg" variant="outline">
-							Keep browsing
+							See all memberships
 						</Button>
 					</Link>
 				</div>

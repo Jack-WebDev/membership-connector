@@ -4,12 +4,15 @@ import { publicProcedure, router } from "../index";
 import { organizationPermissionProcedure } from "../procedures";
 import {
 	getOrganizationDashboardOverview,
+	getOrganizationForAdmin,
 	getPublicOrganizationBySlug,
 	listPublicOrganizations,
+	updateOrganization,
 } from "./service";
 import {
 	getPublicOrganizationInput,
 	listPublicOrganizationsInput,
+	organizationUpdateInput,
 } from "./types";
 
 export const organizationRouter = router({
@@ -39,4 +42,20 @@ export const organizationRouter = router({
 	).query(({ ctx }) =>
 		getOrganizationDashboardOverview(ctx.organization.organizationId),
 	),
+
+	adminGet: organizationPermissionProcedure(
+		"update_organization_settings",
+	).query(({ ctx }) =>
+		getOrganizationForAdmin(ctx.organization.organizationId),
+	),
+
+	update: organizationPermissionProcedure("update_organization_settings")
+		.input(organizationUpdateInput)
+		.mutation(({ ctx, input }) =>
+			updateOrganization(
+				ctx.organization.organizationId,
+				ctx.session.user.id,
+				input,
+			),
+		),
 });

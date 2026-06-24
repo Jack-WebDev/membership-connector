@@ -1,5 +1,6 @@
 "use client";
 
+import { registerInput } from "@membership-connector-app/api/auth/validators";
 import { Button } from "@membership-connector-app/ui/components/button";
 import { FormSection } from "@membership-connector-app/ui/components/form-section";
 import { Input } from "@membership-connector-app/ui/components/input";
@@ -10,7 +11,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
@@ -46,11 +46,7 @@ export default function SignUpForm() {
 			);
 		},
 		validators: {
-			onSubmit: z.object({
-				name: z.string().min(2, "Name must be at least 2 characters"),
-				email: z.email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
-			}),
+			onSubmit: registerInput,
 		},
 	});
 
