@@ -7,7 +7,8 @@
 		"check-types": "tsc -b",
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
 		"dev": "tsx watch src/index.ts",
-		"start": "node dist/index.mjs"
+		"start": "node dist/index.mjs",
+		"seed": "tsx ./scripts/seed.ts"
 	},
 	"dependencies": {
 		"@fastify/cors": "^11.0.1",
@@ -20,6 +21,7 @@
 		"@trpc/server": "catalog:",
 		"better-auth": "catalog:",
 		"dotenv": "catalog:",
+		"drizzle-orm": "^0.45.1",
 		"fastify": "^5.3.3",
 		"zod": "catalog:",
 		"@fastify/circuit-breaker": "4.0.2",
