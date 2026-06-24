@@ -6,14 +6,14 @@ import { FormSection } from "@membership-connector-app/ui/components/form-sectio
 import { Input } from "@membership-connector-app/ui/components/input";
 import { Label } from "@membership-connector-app/ui/components/label";
 import { useForm } from "@tanstack/react-form";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, LogIn, Mail } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient, getLulafiAuthStartUrl } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
@@ -22,6 +22,23 @@ export default function SignInForm() {
 	const searchParams = useSearchParams();
 	const { isPending } = authClient.useSession();
 	const [showPassword, setShowPassword] = useState(false);
+	const [isOAuthPending, setIsOAuthPending] = useState(false);
+
+	const handleLulafiSignIn = async () => {
+		setIsOAuthPending(true);
+		try {
+			window.location.assign(
+				getLulafiAuthStartUrl(searchParams.get("redirectTo") || "/dashboard"),
+			);
+		} catch (error) {
+			setIsOAuthPending(false);
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to sign in with Lulafi",
+			);
+		}
+	};
 
 	const form = useForm({
 		defaultValues: {
@@ -153,6 +170,27 @@ export default function SignInForm() {
 					)}
 				</form.Subscribe>
 			</form>
+
+			<div className="relative my-2">
+				<div className="absolute inset-0 flex items-center">
+					<span className="w-full border-border border-t" />
+				</div>
+				<div className="relative flex justify-center text-xs">
+					<span className="bg-background px-2 text-muted-foreground">or</span>
+				</div>
+			</div>
+
+			<Button
+				type="button"
+				variant="outline"
+				size="lg"
+				className="w-full"
+				disabled={isOAuthPending}
+				onClick={handleLulafiSignIn}
+			>
+				<LogIn data-icon="inline-start" />
+				{isOAuthPending ? "Redirecting..." : "Continue with Lulafi"}
+			</Button>
 
 			<div className="pt-2 text-center text-muted-foreground text-sm">
 				<Link

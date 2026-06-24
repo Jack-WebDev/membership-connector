@@ -8,10 +8,13 @@ export const env = createEnv({
 		BETTER_AUTH_SECRET: z.string().min(32),
 		BETTER_AUTH_URL: z.url(),
 		CORS_ORIGIN: z.url(),
+		LULA_ISSUER: z.url(),
+		LULA_CLIENT_ID: z.string().min(1),
+		LULA_CLIENT_SECRET: z.string().min(1),
 		NODE_ENV: z
 			.enum(["development", "production", "test"])
 			.default("development"),
-		PORT: z.coerce.number().default(3000),
+		PORT: z.coerce.number().default(3001),
 		LOG_LEVEL: z
 			.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
 			.default("info"),
