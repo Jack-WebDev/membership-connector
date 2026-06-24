@@ -26,6 +26,8 @@
 		"prepare": "husky"
 	},
 	"dependencies": {
+		"@hubnet-systems/auth-sdk": "^0.1.7",
+		"@hubnet-systems/chat-sdk": "^0.1.18",
 		"@membership-connector-app/env": "workspace:*",
 		"dotenv": "catalog:",
 		"zod": "catalog:"

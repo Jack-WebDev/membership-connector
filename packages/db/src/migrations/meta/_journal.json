@@ -8,6 +8,13 @@
 			"when": 1782216758511,
 			"tag": "0000_past_lady_mastermind",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1782326437617,
+			"tag": "0001_glamorous_la_nuit",
+			"breakpoints": true
 		}
 	]
 }

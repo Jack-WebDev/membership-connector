@@ -18,6 +18,7 @@ import {
 	fastifyTRPCPlugin,
 } from "@trpc/server/adapters/fastify";
 import type { FastifyInstance, FastifyRequest } from "fastify";
+import { lulafiChatListenerPlugin } from "./lulafi-chat-listener";
 
 export async function registerPlugins(app: FastifyInstance) {
 	await app.register(fastifyHelmet, {
@@ -90,4 +91,6 @@ export async function registerPlugins(app: FastifyInstance) {
 			},
 		} satisfies FastifyTRPCPluginOptions<AppRouter>["trpcOptions"],
 	});
+
+	await app.register(lulafiChatListenerPlugin);
 }

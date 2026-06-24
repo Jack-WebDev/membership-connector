@@ -9,16 +9,20 @@
 			"default": "./src/*.ts"
 		}
 	},
-	"scripts": {},
+	"scripts": {
+		"test": "vitest run"
+	},
 	"dependencies": {
 		"@membership-connector-app/db": "workspace:*",
 		"@membership-connector-app/env": "workspace:*",
 		"better-auth": "catalog:",
 		"dotenv": "catalog:",
+		"drizzle-orm": "^0.45.1",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@membership-connector-app/config": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vitest": "^4.1.9"
 	}
 }

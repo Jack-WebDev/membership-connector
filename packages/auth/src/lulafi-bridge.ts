@@ -453,6 +453,67 @@ async function resolveLocalUser(
 	return await authContext.internalAdapter.findUserById(localUser.user.id);
 }
 
+export async function resolveOrCreateLulafiApplicant(input: {
+	sub?: string;
+	email: string;
+	name: string;
+}) {
+	const authContext = await auth.$context;
+
+	if (input.sub) {
+		const existingAccount =
+			await authContext.internalAdapter.findAccountByProviderId(
+				input.sub,
+				PROVIDER_ID,
+			);
+		if (existingAccount) {
+			const existingUser = await authContext.internalAdapter.findUserById(
+				existingAccount.userId,
+			);
+			if (existingUser) {
+				return existingUser;
+			}
+		}
+	}
+
+	const email = input.email.trim().toLowerCase();
+	let localUser = await authContext.internalAdapter.findUserByEmail(email, {
+		includeAccounts: true,
+	});
+
+	if (!localUser) {
+		const createdUser = await authContext.internalAdapter.createUser({
+			name: input.name.trim() || email.split("@")[0] || "LulaFi Applicant",
+			email,
+			emailVerified: false,
+			image: null,
+		});
+		localUser = { user: createdUser, accounts: [] };
+	}
+
+	if (input.sub) {
+		const alreadyLinked = localUser.accounts.some(
+			(account) =>
+				account.providerId === PROVIDER_ID && account.accountId === input.sub,
+		);
+		if (!alreadyLinked) {
+			await authContext.internalAdapter.linkAccount({
+				accountId: input.sub,
+				providerId: PROVIDER_ID,
+				userId: localUser.user.id,
+				accessToken: null,
+				refreshToken: null,
+				idToken: null,
+				accessTokenExpiresAt: null,
+				scope: null,
+				password: null,
+			});
+		}
+	}
+
+	return localUser.user;
+}
+
 async function createBridgeSessionCookie(userId: string) {
 	const authContext = await auth.$context;
 	const session = await authContext.internalAdapter.createSession(userId);
