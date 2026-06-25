@@ -56,6 +56,10 @@ export type TierPricingCardProps = {
 	benefits: string[];
 	requirements?: string[];
 	status?: string;
+	statusTone?: StatusBadgeTone;
+	href?: string;
+	disabled?: boolean;
+	actionLabel?: string;
 };
 
 export type AnnouncementCardProps = {

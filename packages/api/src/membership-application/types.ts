@@ -73,6 +73,17 @@ export type MemberApplicationDetail = MemberApplicationSummary & {
 	createdAt: Date;
 };
 
+export type MemberMembershipStatusInfo = {
+	currentTier: {
+		membershipTierId: string;
+		status: "active" | "pending_payment";
+	} | null;
+	pendingApplication: {
+		membershipTierId: string;
+		status: "submitted" | "under_review" | "needs_information";
+	} | null;
+};
+
 const applicationStatusValues = [
 	"draft",
 	"submitted",

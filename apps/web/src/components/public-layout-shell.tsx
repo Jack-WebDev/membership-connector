@@ -21,7 +21,7 @@ export default function PublicLayoutShell({
 
 	return (
 		<div className="min-h-screen">
-			<header className="sticky top-0 z-30 border-border/70 border-b bg-background/80 backdrop-blur-xl">
+			<header className="sticky top-0 z-30 border-white/45 border-b bg-background/62 backdrop-blur-xl">
 				<div className="mx-auto flex max-w-380 items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
 					<div className="flex items-center gap-3">
 						<MobileNav
@@ -30,7 +30,7 @@ export default function PublicLayoutShell({
 							renderLink={renderNavigationLink}
 						/>
 						<Link href="/" className="flex items-center gap-3">
-							<span className="inline-flex size-11 items-center justify-center rounded-full border border-border/80 bg-card font-display text-primary text-xl shadow-(--shadow-card)">
+							<span className="inline-flex size-11 items-center justify-center rounded-full border border-white/65 bg-[linear-gradient(135deg,rgb(255_255_255_/_0.92),rgb(233_242_249_/_0.86))] font-display text-primary text-xl shadow-(--shadow-card)">
 								MC
 							</span>
 							<span>
@@ -48,8 +48,8 @@ export default function PublicLayoutShell({
 								className={cn(
 									"rounded-full px-4 py-2 text-sm transition-colors",
 									item.active
-										? "bg-card text-foreground shadow-(--shadow-card)"
-										: "text-muted-foreground hover:text-foreground",
+										? "bg-white/82 text-foreground shadow-(--shadow-card)"
+										: "text-muted-foreground hover:bg-white/55 hover:text-foreground",
 								)}
 							>
 								{item.label}

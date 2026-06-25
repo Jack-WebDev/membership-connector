@@ -11,7 +11,7 @@ function Card({
 			data-slot="card"
 			data-size={size}
 			className={cn(
-				"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-[calc(var(--radius)*1.1)] bg-card py-(--card-spacing) text-card-foreground text-xs/relaxed shadow-[var(--shadow-card)] ring-1 ring-foreground/8 [--card-spacing:--spacing(5)] has-[>img:first-child]:pt-0 has-data-[slot=card-footer]:pb-0 data-[size=sm]:has-data-[slot=card-footer]:pb-0 data-[size=sm]:[--card-spacing:--spacing(4)] *:[img:first-child]:rounded-t-[calc(var(--radius)*1.1)] *:[img:last-child]:rounded-b-[calc(var(--radius)*1.1)]",
+				"surface-panel group/card flex flex-col gap-(--card-spacing) rounded-[calc(var(--radius)*1.1)] py-(--card-spacing) text-card-foreground text-xs/relaxed ring-1 ring-foreground/6 transition-transform duration-300 [--card-spacing:--spacing(5)] has-[>img:first-child]:pt-0 has-data-[slot=card-footer]:pb-0 data-[size=sm]:has-data-[slot=card-footer]:pb-0 data-[size=sm]:[--card-spacing:--spacing(4)] *:[img:first-child]:rounded-t-[calc(var(--radius)*1.1)] *:[img:last-child]:rounded-b-[calc(var(--radius)*1.1)]",
 				className,
 			)}
 			{...props}

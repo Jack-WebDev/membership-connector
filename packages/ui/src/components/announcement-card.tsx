@@ -17,7 +17,7 @@ function AnnouncementCard({
 	return (
 		<article
 			className={cn(
-				"rounded-[calc(var(--radius)*1.15)] border border-border/80 bg-card/90 p-6 shadow-[var(--shadow-card)]",
+				"surface-panel rounded-[calc(var(--radius)*1.15)] p-6",
 				className,
 			)}
 		>

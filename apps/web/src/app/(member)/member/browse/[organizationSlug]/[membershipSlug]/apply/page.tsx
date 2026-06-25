@@ -1,27 +1,27 @@
-import { PageHeader } from "@membership-connector-app/ui/components/page-header";
+import { DashboardHeader } from "@membership-connector-app/ui/components/dashboard-header";
 import { TRPCClientError } from "@trpc/client";
 import { notFound } from "next/navigation";
 
 import { ApplicationForm } from "@/components/applications/application-form";
 import { requireMemberSession } from "@/lib/server-auth";
-import { serverTrpc, serverTrpcAuthed } from "@/utils/trpc-server";
+import { serverTrpcAuthed } from "@/utils/trpc-server";
 
-type ApplyPageProps = {
+type MemberApplyPageProps = {
 	params: Promise<{ organizationSlug: string; membershipSlug: string }>;
 	searchParams: Promise<{ tier?: string }>;
 };
 
-export default async function ApplyToMembershipPage({
+export default async function MemberApplyToMembershipPage({
 	params,
 	searchParams,
-}: ApplyPageProps) {
+}: MemberApplyPageProps) {
 	const { organizationSlug, membershipSlug } = await params;
 	const { tier: initialTierId } = await searchParams;
-	const loginRedirectTo = `/organizations/${organizationSlug}/memberships/${membershipSlug}/apply`;
+	const loginRedirectTo = `/member/browse/${organizationSlug}/${membershipSlug}/apply`;
 
 	const session = await requireMemberSession(loginRedirectTo);
 
-	const membership = await serverTrpc.membership.getPublicBySlug
+	const membership = await serverTrpcAuthed.membership.getPublicBySlug
 		.query({ organizationSlug, membershipSlug })
 		.catch((error) => {
 			if (
@@ -49,8 +49,7 @@ export default async function ApplyToMembershipPage({
 
 	return (
 		<div className="space-y-10">
-			<PageHeader
-				eyebrow={membership.organizationName}
+			<DashboardHeader
 				title={`Apply to ${membership.name}`}
 				description="Tell the organization a bit about yourself. You can save your progress as a draft and come back to finish later."
 			/>

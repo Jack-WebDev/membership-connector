@@ -8,6 +8,7 @@ import {
 	getApplicationForReview,
 	getDraftApplicationForMembership,
 	getMemberApplicationDetail,
+	getMemberStatusForMembership,
 	listApplicationFilterOptions,
 	listApplicationsForReview,
 	listMemberApplications,
@@ -50,6 +51,12 @@ export const membershipApplicationRouter = router({
 		.input(membershipIdInput)
 		.query(({ ctx, input }) =>
 			getDraftApplicationForMembership(ctx.session.user.id, input.membershipId),
+		),
+
+	getStatusForMembership: memberProcedure
+		.input(membershipIdInput)
+		.query(({ ctx, input }) =>
+			getMemberStatusForMembership(ctx.session.user.id, input.membershipId),
 		),
 
 	saveDraft: memberProcedure

@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/a11y/useAnchorContent: biome-ignore lint: false positive, Base UI's render clones the Button's children into the anchor */
 import { Button } from "@membership-connector-app/ui/components/button";
 import { StatusBadge } from "@membership-connector-app/ui/components/status-badge";
 import type { TierPricingCardProps } from "@membership-connector-app/ui/lib/app-types";
@@ -13,11 +14,15 @@ function TierPricingCard({
 	benefits,
 	requirements,
 	status,
+	statusTone = "active",
+	href,
+	disabled,
+	actionLabel = "Select tier",
 }: TierPricingCardProps & { className?: string }) {
 	return (
 		<article
 			className={cn(
-				"flex h-full flex-col gap-5 rounded-[calc(var(--radius)*1.2)] border border-border/80 bg-card/90 p-6 shadow-[var(--shadow-card)]",
+				"surface-panel flex h-full flex-col gap-5 rounded-[calc(var(--radius)*1.2)] p-6",
 				className,
 			)}
 		>
@@ -30,9 +35,9 @@ function TierPricingCard({
 						{description}
 					</p>
 				</div>
-				{status ? <StatusBadge label={status} tone="active" /> : null}
+				{status ? <StatusBadge label={status} tone={statusTone} /> : null}
 			</div>
-			<div className="rounded-[calc(var(--radius)*0.95)] bg-muted/55 p-5">
+			<div className="rounded-[calc(var(--radius)*0.95)] border border-white/55 bg-[linear-gradient(135deg,rgb(255_255_255_/_0.8),rgb(232_241_249_/_0.75))] p-5">
 				<div className="font-(family-name:--font-display) text-4xl text-foreground">
 					{price}
 				</div>
@@ -67,7 +72,13 @@ function TierPricingCard({
 					</div>
 				) : null}
 			</div>
-			<Button className="mt-auto w-full">Select tier</Button>
+			<Button
+				className="mt-auto w-full"
+				disabled={disabled || !href}
+				render={href && !disabled ? <a href={href} /> : undefined}
+			>
+				{actionLabel}
+			</Button>
 		</article>
 	);
 }

@@ -20,7 +20,7 @@ function DashboardHeader({
 	return (
 		<div
 			className={cn(
-				"flex flex-col gap-5 rounded-[calc(var(--radius)*1.25)] border border-border/80 bg-card/90 p-6 shadow-[var(--shadow-card)] sm:flex-row sm:items-start sm:justify-between",
+				"hero-panel flex flex-col gap-5 rounded-[calc(var(--radius)*1.35)] border border-white/55 p-6 sm:flex-row sm:items-start sm:justify-between",
 				className,
 			)}
 		>

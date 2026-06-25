@@ -124,7 +124,7 @@ export default async function MemberDashboardPage() {
 									<MembershipCard
 										key={membership.id}
 										{...toMembershipCardProps(membership, {
-											href: `/organizations/${membership.organizationSlug}/memberships/${membership.slug}`,
+											href: `/member/browse/${membership.organizationSlug}/${membership.slug}`,
 										})}
 									/>
 								))}

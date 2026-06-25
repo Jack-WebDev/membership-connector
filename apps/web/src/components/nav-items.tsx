@@ -48,11 +48,16 @@ export const memberNavItems = (
 		href: `${basePath}/memberships`,
 		icon: <BadgeCheckIcon className="size-4" />,
 	},
-	// {
-	// 	label: "Browse",
-	// 	href: `${basePath}/browse`,
-	// 	icon: <SearchIcon className="size-4" />,
-	// },
+	{
+		label: "Browse",
+		href: `${basePath}/browse`,
+		icon: <SearchIcon className="size-4" />,
+	},
+	{
+		label: "Organizations",
+		href: `${basePath}/organizations`,
+		icon: <Building2Icon className="size-4" />,
+	},
 	// {
 	// 	label: "Saved",
 	// 	href: `${basePath}/saved`,

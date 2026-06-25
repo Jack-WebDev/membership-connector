@@ -55,7 +55,6 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
 				actions={
 					<MembershipDetailActions
 						membershipId={membership.id}
-						applyHref={applyHref}
 						auth={authState}
 					/>
 				}
@@ -72,7 +71,9 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
 						{membership.tiers.map((tier) => (
 							<TierPricingCard
 								key={tier.id}
-								{...toTierPricingCardProps(tier)}
+								{...toTierPricingCardProps(tier, {
+									href: `${applyHref}?tier=${tier.id}`,
+								})}
 							/>
 						))}
 					</div>

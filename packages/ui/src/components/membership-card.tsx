@@ -22,7 +22,7 @@ function MembershipCard({
 	return (
 		<article
 			className={cn(
-				"group/card flex h-full flex-col gap-5 rounded-[calc(var(--radius)*1.2)] border border-border/80 bg-card/90 p-6 shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[var(--shadow-soft)]",
+				"surface-panel group/card flex h-full flex-col gap-5 rounded-[calc(var(--radius)*1.2)] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-[var(--shadow-soft)]",
 				className,
 			)}
 		>
@@ -40,7 +40,7 @@ function MembershipCard({
 			<p className="flex-1 text-muted-foreground text-sm leading-7">
 				{shortDescription}
 			</p>
-			<div className="grid grid-cols-2 gap-3 rounded-[calc(var(--radius)*0.95)] bg-muted/55 p-4 text-sm">
+			<div className="grid grid-cols-2 gap-3 rounded-[calc(var(--radius)*0.95)] border border-white/55 bg-[linear-gradient(135deg,rgb(255_255_255_/_0.8),rgb(232_241_249_/_0.75))] p-4 text-sm">
 				<div>
 					<div className="font-semibold text-[0.68rem] text-muted-foreground uppercase tracking-[0.18em]">
 						Category

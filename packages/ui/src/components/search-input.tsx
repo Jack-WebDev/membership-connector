@@ -10,7 +10,10 @@ function SearchInput({
 	return (
 		<div className={cn("relative min-w-56", className)}>
 			<SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-			<Input className="h-10 rounded-full bg-background pr-4 pl-9" {...props} />
+			<Input
+				className="h-11 rounded-full border-white/70 bg-white/82 pr-4 pl-9 shadow-[0_12px_28px_rgb(33_56_74_/_0.08)]"
+				{...props}
+			/>
 		</div>
 	);
 }

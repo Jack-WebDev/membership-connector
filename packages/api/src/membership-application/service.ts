@@ -23,6 +23,7 @@ import type {
 	ListMemberApplicationsInput,
 	MemberApplicationDetail,
 	MemberApplicationSummary,
+	MemberMembershipStatusInfo,
 	RespondToInformationRequestInput,
 	SaveApplicationDraftInput,
 	SubmitApplicationInput,
@@ -126,6 +127,7 @@ async function assertNoConflictingApplicationOrMembership(
 	executor: DbExecutor,
 	userId: string,
 	membershipId: string,
+	membershipTierId: string,
 	excludeApplicationId?: string,
 ) {
 	const activeApplication =
@@ -155,10 +157,15 @@ async function assertNoConflictingApplicationOrMembership(
 		),
 	});
 
-	if (activeMembership) {
+	// An active member may apply for a different tier to request an upgrade;
+	// approving it updates their existing membership instead of conflicting.
+	if (
+		activeMembership &&
+		activeMembership.membershipTierId === membershipTierId
+	) {
 		throw new TRPCError({
 			code: "CONFLICT",
-			message: "You already have an active membership for this membership",
+			message: "You already have an active membership at this tier",
 		});
 	}
 }
@@ -305,6 +312,7 @@ export async function submitApplication(
 			tx,
 			userId,
 			input.membershipId,
+			input.membershipTierId,
 			applicationId,
 		);
 
@@ -534,6 +542,45 @@ export async function getDraftApplicationForMembership(
 	});
 
 	return application ? toDetail(application) : null;
+}
+
+export async function getMemberStatusForMembership(
+	userId: string,
+	membershipId: string,
+): Promise<MemberMembershipStatusInfo> {
+	const application = await db.query.membershipApplications.findFirst({
+		where: and(
+			eq(membershipApplications.userId, userId),
+			eq(membershipApplications.membershipId, membershipId),
+			inArray(membershipApplications.status, ACTIVE_APPLICATION_STATUSES),
+		),
+	});
+
+	const member = await db.query.membershipMembers.findFirst({
+		where: and(
+			eq(membershipMembers.membershipId, membershipId),
+			eq(membershipMembers.userId, userId),
+			inArray(membershipMembers.status, ACTIVE_MEMBER_STATUSES),
+		),
+	});
+
+	return {
+		currentTier: member
+			? {
+					membershipTierId: member.membershipTierId,
+					status: member.status as "active" | "pending_payment",
+				}
+			: null,
+		pendingApplication: application
+			? {
+					membershipTierId: application.membershipTierId,
+					status: application.status as
+						| "submitted"
+						| "under_review"
+						| "needs_information",
+				}
+			: null,
+	};
 }
 
 const REVIEWABLE_APPLICATION_STATUSES = ["submitted", "under_review"] as const;
@@ -789,10 +836,14 @@ export async function approveApplication(
 			),
 		});
 
-		if (existingMember) {
+		const isUpgrade =
+			existingMember != null &&
+			existingMember.membershipTierId !== application.membershipTierId;
+
+		if (existingMember && !isUpgrade) {
 			throw new TRPCError({
 				code: "CONFLICT",
-				message: "This member already has an active membership",
+				message: "This member already has an active membership at this tier",
 			});
 		}
 
@@ -803,15 +854,26 @@ export async function approveApplication(
 
 		const now = new Date();
 
-		await tx.insert(membershipMembers).values({
-			id: crypto.randomUUID(),
-			membershipId: application.membershipId,
-			membershipTierId: application.membershipTierId,
-			organizationId,
-			userId: application.userId,
-			applicationId,
-			status: memberStatus,
-		});
+		if (isUpgrade && existingMember) {
+			await tx
+				.update(membershipMembers)
+				.set({
+					membershipTierId: application.membershipTierId,
+					applicationId,
+					status: memberStatus,
+				})
+				.where(eq(membershipMembers.id, existingMember.id));
+		} else {
+			await tx.insert(membershipMembers).values({
+				id: crypto.randomUUID(),
+				membershipId: application.membershipId,
+				membershipTierId: application.membershipTierId,
+				organizationId,
+				userId: application.userId,
+				applicationId,
+				status: memberStatus,
+			});
+		}
 
 		await tx
 			.update(membershipApplications)
@@ -833,21 +895,23 @@ export async function approveApplication(
 				membershipId: application.membershipId,
 				membershipTierId: application.membershipTierId,
 				memberStatus,
+				isUpgrade,
 			},
 		});
 
 		await createNotification(tx, {
 			userId: application.userId,
 			type: "application.approved",
-			title: "Application approved",
-			body:
-				memberStatus === "active"
+			title: isUpgrade ? "Tier upgrade approved" : "Application approved",
+			body: isUpgrade
+				? `Your membership tier for ${application.membership.name} has been updated to ${application.membershipTier.name}.`
+				: memberStatus === "active"
 					? `You're now a member of ${application.membership.name}.`
 					: `Your application to ${application.membership.name} was approved. Complete payment to activate your membership.`,
 			data: { applicationId, membershipId: application.membershipId },
 		});
 
-		if (memberStatus === "active") {
+		if (memberStatus === "active" && !isUpgrade) {
 			await notifyOrganizationAdmins(tx, organizationId, "manage_members", {
 				type: "member.activated",
 				title: "New member activated",

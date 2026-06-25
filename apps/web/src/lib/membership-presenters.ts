@@ -2,12 +2,44 @@ import type {
 	PublicMembershipSummary,
 	PublicMembershipTierSummary,
 } from "@membership-connector-app/api/membership/types";
+import type { MemberMembershipStatusInfo } from "@membership-connector-app/api/membership-application/types";
 import type { PublicOrganizationSummary } from "@membership-connector-app/api/organization/types";
 import type {
 	MembershipCardProps,
 	OrganizationCardProps,
+	StatusBadgeTone,
 	TierPricingCardProps,
 } from "@membership-connector-app/ui/lib/app-types";
+
+type MemberTierStatus =
+	| NonNullable<MemberMembershipStatusInfo["currentTier"]>["status"]
+	| NonNullable<MemberMembershipStatusInfo["pendingApplication"]>["status"];
+
+const MEMBER_STATUS_LABELS: Record<MemberTierStatus, string> = {
+	submitted: "Applied",
+	under_review: "Under review",
+	needs_information: "Needs information",
+	active: "Active member",
+	pending_payment: "Payment pending",
+};
+
+const MEMBER_STATUS_TONES: Record<MemberTierStatus, StatusBadgeTone> = {
+	submitted: "pending",
+	under_review: "info",
+	needs_information: "warning",
+	active: "active",
+	pending_payment: "pending",
+};
+
+export function formatMemberStatusLabel(status: MemberTierStatus): string {
+	return MEMBER_STATUS_LABELS[status];
+}
+
+export function formatMemberStatusTone(
+	status: MemberTierStatus,
+): StatusBadgeTone {
+	return MEMBER_STATUS_TONES[status];
+}
 
 const BILLING_INTERVAL_LABELS: Record<
 	PublicMembershipTierSummary["billingInterval"],
@@ -78,6 +110,13 @@ export function toOrganizationCardProps(
 
 export function toTierPricingCardProps(
 	tier: PublicMembershipTierSummary,
+	options: {
+		href?: string;
+		status?: string;
+		statusTone?: StatusBadgeTone;
+		disabled?: boolean;
+		actionLabel?: string;
+	} = {},
 ): TierPricingCardProps {
 	return {
 		name: tier.name,
@@ -86,5 +125,10 @@ export function toTierPricingCardProps(
 		billingInterval: formatBillingInterval(tier.billingInterval),
 		benefits: tier.benefits.map((benefit) => String(benefit)),
 		requirements: tier.requirements.map((requirement) => String(requirement)),
+		href: options.href,
+		status: options.status,
+		statusTone: options.statusTone,
+		disabled: options.disabled,
+		actionLabel: options.actionLabel,
 	};
 }

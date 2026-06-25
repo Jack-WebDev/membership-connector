@@ -2,10 +2,6 @@
 
 import { Button } from "@membership-connector-app/ui/components/button";
 import { Label } from "@membership-connector-app/ui/components/label";
-import {
-	NativeSelect,
-	NativeSelectOption,
-} from "@membership-connector-app/ui/components/native-select";
 import { cn } from "@membership-connector-app/ui/lib/utils";
 import type * as React from "react";
 import {
@@ -42,7 +38,7 @@ function FilterBar({
 	return (
 		<div
 			className={cn(
-				"flex flex-col gap-3 rounded-[calc(var(--radius)*1.1)] border border-border/80 bg-card/85 p-4 shadow-(--shadow-card) sm:flex-row sm:flex-wrap sm:items-end sm:justify-between",
+				"surface-panel flex flex-col gap-3 rounded-[calc(var(--radius)*1.1)] p-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between",
 				className,
 			)}
 		>

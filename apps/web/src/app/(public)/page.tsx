@@ -46,11 +46,13 @@ export default async function HomePage() {
 	const featuredOrganizations = organizations.items.slice(0, FEATURED_COUNT);
 
 	return (
-		<div className="space-y-14 pb-10">
+		<div className="space-y-16 pb-12">
 			<PageHeader
+				className="section-wash"
+				eyebrow="Trusted memberships"
 				align="center"
 				title="Find a membership you'll love"
-				description="Search memberships and community groups. Joining takes just a few minutes"
+				description="Search memberships and community groups with a calm, guided experience built to feel as trustworthy as the institutions behind them."
 				actions={
 					<form
 						action="/memberships"
@@ -70,7 +72,33 @@ export default async function HomePage() {
 				}
 			/>
 
-			<section className="fade-in slide-in-from-bottom-4 animate-in space-y-6 fill-mode-both delay-100 duration-700">
+			<section className="grid gap-4 md:grid-cols-3">
+				{[
+					[
+						"Verified organizations",
+						`${organizations.total ?? organizations.items.length}+`,
+					],
+					[
+						"Published memberships",
+						`${memberships.total ?? memberships.items.length}+`,
+					],
+					["Application-first journey", "3 steps"],
+				].map(([label, value]) => (
+					<div
+						key={label}
+						className="surface-panel rounded-[calc(var(--radius)*1.1)] p-5"
+					>
+						<div className="font-semibold text-[0.68rem] text-primary uppercase tracking-[0.22em]">
+							{label}
+						</div>
+						<div className="font-(family-name:--font-display) mt-3 text-4xl text-foreground leading-none">
+							{value}
+						</div>
+					</div>
+				))}
+			</section>
+
+			<section className="section-wash fade-in slide-in-from-bottom-4 animate-in space-y-6 fill-mode-both delay-100 duration-700">
 				<SectionHeader
 					eyebrow="How it works"
 					title="Joining takes just three simple steps"
@@ -81,9 +109,9 @@ export default async function HomePage() {
 						<div
 							key={step.number}
 							style={{ animationDelay: `${150 + index * 100}ms` }}
-							className="fade-in slide-in-from-bottom-4 flex animate-in flex-col gap-3 rounded-[calc(var(--radius)*1.2)] border border-border/80 bg-card/90 fill-mode-both p-6 text-center shadow-[var(--shadow-card)] duration-700 sm:text-left"
+							className="surface-panel fade-in slide-in-from-bottom-4 flex animate-in flex-col gap-3 rounded-[calc(var(--radius)*1.2)] fill-mode-both p-6 text-center duration-700 sm:text-left"
 						>
-							<div className="font-(family-name:--font-display) mx-auto flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl sm:mx-0">
+							<div className="font-(family-name:--font-display) mx-auto flex size-12 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground text-xl shadow-(--shadow-glow) sm:mx-0">
 								{step.number}
 							</div>
 							<h3 className="font-(family-name:--font-display) text-2xl text-foreground">
@@ -97,7 +125,7 @@ export default async function HomePage() {
 				</div>
 			</section>
 
-			<section className="fade-in slide-in-from-bottom-4 animate-in space-y-6 fill-mode-both delay-150 duration-700">
+			<section className="section-wash fade-in slide-in-from-bottom-4 animate-in space-y-6 fill-mode-both delay-150 duration-700">
 				<SectionHeader
 					eyebrow="Featured groups"
 					title="Communities you can join today"
@@ -129,7 +157,7 @@ export default async function HomePage() {
 				</div>
 			</section>
 
-			<section className="fade-in slide-in-from-bottom-4 animate-in space-y-6 fill-mode-both delay-200 duration-700">
+			<section className="section-wash fade-in slide-in-from-bottom-4 animate-in space-y-6 fill-mode-both delay-200 duration-700">
 				<SectionHeader
 					eyebrow="Get started"
 					title="A few memberships to get you started"

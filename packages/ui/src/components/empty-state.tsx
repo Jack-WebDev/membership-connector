@@ -27,7 +27,7 @@ function EmptyState({
 	return (
 		<Empty
 			className={cn(
-				"rounded-[calc(var(--radius)*1.25)] border border-border border-dashed bg-card/80 py-12 shadow-[var(--shadow-card)]",
+				"surface-panel rounded-[calc(var(--radius)*1.25)] border-dashed py-12",
 				className,
 			)}
 		>

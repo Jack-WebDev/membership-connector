@@ -69,16 +69,23 @@ export default async function MembershipsPage({
 	}
 
 	return (
-		<div className="space-y-6">
-			<SectionHeader
-				eyebrow="Memberships"
-				title="Find a membership that's right for you"
-				description="Use the filters below to narrow things down, or search by name."
-			/>
+		<div className="space-y-8">
+			<section className="section-wash space-y-5">
+				<SectionHeader
+					eyebrow="Memberships"
+					title="Find a membership that's right for you"
+					description="Use the filters below to narrow things down with a cleaner, more deliberate browsing experience."
+				/>
+			</section>
 			<MembershipFilters categories={filterOptions.categories} />
-			<p className="text-muted-foreground text-sm">
-				Showing {memberships.items.length} of {memberships.total} memberships
-			</p>
+			<div className="surface-panel flex items-center justify-between rounded-[calc(var(--radius)*1.1)] p-4">
+				<p className="text-muted-foreground text-sm">
+					Showing {memberships.items.length} of {memberships.total} memberships
+				</p>
+				<p className="font-medium text-foreground text-sm">
+					Transparent at a glance
+				</p>
+			</div>
 			{memberships.items.length > 0 ? (
 				<div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
 					{memberships.items.map((membership, index) => (

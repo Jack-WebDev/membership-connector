@@ -76,7 +76,7 @@ export default async function MemberApplicationDetailPage({
 								render={
 									<Link
 										href={
-											`/organizations/${application.organizationSlug}/memberships/${application.membershipSlug}/apply` as Route
+											`/member/browse/${application.organizationSlug}/${application.membershipSlug}/apply` as Route
 										}
 									/>
 								}

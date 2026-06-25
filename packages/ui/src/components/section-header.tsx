@@ -16,7 +16,7 @@ function SectionHeader({
 	return (
 		<div
 			className={cn(
-				"flex flex-col gap-4 border-border/80 border-b pb-5 sm:flex-row sm:items-end sm:justify-between",
+				"flex flex-col gap-4 pb-1 sm:flex-row sm:items-end sm:justify-between",
 				className,
 			)}
 		>
@@ -30,7 +30,7 @@ function SectionHeader({
 					{title}
 				</h2>
 				{description ? (
-					<p className="max-w-2xl text-muted-foreground text-sm leading-6">
+					<p className="max-w-2xl text-muted-foreground text-sm leading-7">
 						{description}
 					</p>
 				) : null}

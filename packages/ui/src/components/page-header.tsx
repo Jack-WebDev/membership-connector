@@ -18,7 +18,7 @@ function PageHeader({
 	return (
 		<div
 			className={cn(
-				"flex flex-col gap-6 rounded-[calc(var(--radius)*1.5)] border border-border/80 bg-card/90 p-8 shadow-[var(--shadow-soft)] backdrop-blur-sm sm:p-10",
+				"hero-panel flex flex-col gap-6 rounded-[calc(var(--radius)*1.5)] border border-white/60 p-8 backdrop-blur-sm sm:p-10",
 				align === "center" && "items-center text-center",
 				className,
 			)}

@@ -156,6 +156,25 @@ export default async function OrganizationDashboardPage({
 
 	return (
 		<div className="space-y-6">
+			<DashboardHeader
+				title="Organization overview"
+				description="Track applications, members, announcements, and revenue from a single dependable workspace."
+				actions={
+					quickActions.length > 0 ? (
+						<div className="flex flex-wrap gap-2">
+							{quickActions.slice(0, 3).map((action) => (
+								<Button
+									key={action.href}
+									variant="outline"
+									render={<Link href={action.href} />}
+								>
+									{action.label}
+								</Button>
+							))}
+						</div>
+					) : undefined
+				}
+			/>
 			<div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 				<StatCard
 					label="Active members"

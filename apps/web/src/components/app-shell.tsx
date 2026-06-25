@@ -8,7 +8,6 @@ import {
 	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
-	SidebarGroupLabel,
 	SidebarHeader,
 	SidebarInset,
 	SidebarMenu,
@@ -70,12 +69,18 @@ export default function AppShell({
 				</SidebarHeader>
 				<SidebarContent>
 					<SidebarGroup>
-						{/* <SidebarGroupLabel>{title}</SidebarGroupLabel>
-						{subtitle ? (
-							<p className="-mt-1 truncate px-2 pb-2 text-sidebar-foreground/70 text-xs group-data-[collapsible=icon]:hidden">
-								{subtitle}
-							</p>
-						) : null} */}
+						{title ? (
+							<div className="px-2 pb-3 group-data-[collapsible=icon]:hidden">
+								<p className="truncate font-medium text-sidebar-foreground text-sm">
+									{title}
+								</p>
+								{subtitle ? (
+									<p className="mt-1 truncate text-sidebar-foreground/68 text-xs uppercase tracking-[0.18em]">
+										{subtitle}
+									</p>
+								) : null}
+							</div>
+						) : null}
 						<SidebarGroupContent>
 							<NavMenu items={activeItems} renderLink={renderNavigationLink} />
 						</SidebarGroupContent>
@@ -87,7 +92,7 @@ export default function AppShell({
 				</SidebarFooter>
 			</Sidebar>
 			<SidebarInset>
-				<header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-2 border-border border-b bg-background/95 px-4 backdrop-blur">
+				<header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-2 border-white/45 border-b bg-background/68 px-4 backdrop-blur-xl">
 					<div className="flex min-w-0 items-center gap-3">
 						<SidebarTrigger />
 						{currentItem ? (

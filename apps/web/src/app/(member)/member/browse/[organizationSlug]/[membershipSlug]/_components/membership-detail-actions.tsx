@@ -8,17 +8,14 @@ import { trpc } from "@/utils/trpc";
 
 type MembershipDetailActionsProps = {
 	membershipId: string;
-	auth: "anonymous" | "member" | "no-member-role";
 };
 
 function MembershipDetailActions({
 	membershipId,
-	auth,
 }: MembershipDetailActionsProps) {
-	const isSavedQuery = useQuery({
-		...trpc.membership.isSaved.queryOptions({ membershipId }),
-		enabled: auth === "member",
-	});
+	const isSavedQuery = useQuery(
+		trpc.membership.isSaved.queryOptions({ membershipId }),
+	);
 
 	const toggleSavedMutation = useMutation(
 		trpc.membership.toggleSaved.mutationOptions({
@@ -30,19 +27,17 @@ function MembershipDetailActions({
 
 	return (
 		<div className="flex flex-wrap items-center gap-3">
-			{auth === "member" ? (
-				<Button
-					size="lg"
-					variant="outline"
-					disabled={toggleSavedMutation.isPending}
-					onClick={() => toggleSavedMutation.mutate({ membershipId })}
-				>
-					<BookmarkIcon
-						className={isSavedQuery.data ? "fill-current" : undefined}
-					/>
-					{isSavedQuery.data ? "Saved" : "Save"}
-				</Button>
-			) : null}
+			<Button
+				size="lg"
+				variant="outline"
+				disabled={toggleSavedMutation.isPending}
+				onClick={() => toggleSavedMutation.mutate({ membershipId })}
+			>
+				<BookmarkIcon
+					className={isSavedQuery.data ? "fill-current" : undefined}
+				/>
+				{isSavedQuery.data ? "Saved" : "Save"}
+			</Button>
 		</div>
 	);
 }

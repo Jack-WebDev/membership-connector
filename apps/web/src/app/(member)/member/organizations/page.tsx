@@ -11,23 +11,26 @@ import { SectionHeader } from "@membership-connector-app/ui/components/section-h
 import type { Route } from "next";
 
 import { toOrganizationCardProps } from "@/lib/membership-presenters";
-import { serverTrpc } from "@/utils/trpc-server";
+import { requireMemberSession } from "@/lib/server-auth";
+import { serverTrpcAuthed } from "@/utils/trpc-server";
 
 import { OrganizationSearch } from "./_components/organization-search";
 
 const PAGE_SIZE = 12;
 
-type OrganizationsPageProps = {
+type MemberOrganizationsPageProps = {
 	searchParams: Promise<{ search?: string; page?: string }>;
 };
 
-export default async function OrganizationsPage({
+export default async function MemberOrganizationsPage({
 	searchParams,
-}: OrganizationsPageProps) {
+}: MemberOrganizationsPageProps) {
+	await requireMemberSession("/member/organizations");
+
 	const params = await searchParams;
 	const page = Number(params.page) > 0 ? Number(params.page) : 1;
 
-	const organizations = await serverTrpc.organization.listPublic.query({
+	const organizations = await serverTrpcAuthed.organization.listPublic.query({
 		search: params.search,
 		page,
 		pageSize: PAGE_SIZE,
@@ -43,38 +46,26 @@ export default async function OrganizationsPage({
 	}
 
 	return (
-		<div className="space-y-8">
-			<section className="section-wash space-y-5">
-				<SectionHeader
-					eyebrow="Organizations"
-					title="Groups and memberships you can join"
-					description="Browse established organizations with a clearer, calmer view of what each one offers."
-					actions={<OrganizationSearch />}
-				/>
-				<div className="surface-panel flex flex-wrap items-center justify-between gap-3 rounded-[calc(var(--radius)*1.1)] p-4">
-					<p className="text-muted-foreground text-sm">
-						Showing {organizations.items.length} of {organizations.total}{" "}
-						organizations
-					</p>
-					<p className="font-medium text-foreground text-sm">
-						Curated for confident comparison
-					</p>
-				</div>
-			</section>
+		<div className="space-y-6">
+			<SectionHeader
+				eyebrow="Organizations"
+				title="Groups and memberships you can join"
+				description="Browse the organizations below to see what each one offers."
+				actions={<OrganizationSearch />}
+			/>
+			<p className="text-muted-foreground text-sm">
+				Showing {organizations.items.length} of {organizations.total}{" "}
+				organizations
+			</p>
 			{organizations.items.length > 0 ? (
 				<div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-					{organizations.items.map((organization, index) => (
-						<div
+					{organizations.items.map((organization) => (
+						<OrganizationCard
 							key={organization.id}
-							style={{ animationDelay: `${index * 80}ms` }}
-							className="fade-in slide-in-from-bottom-4 h-full animate-in fill-mode-both duration-500"
-						>
-							<OrganizationCard
-								{...toOrganizationCardProps(organization, {
-									href: `/organizations/${organization.slug}`,
-								})}
-							/>
-						</div>
+							{...toOrganizationCardProps(organization, {
+								href: `/member/organizations/${organization.slug}`,
+							})}
+						/>
 					))}
 				</div>
 			) : (

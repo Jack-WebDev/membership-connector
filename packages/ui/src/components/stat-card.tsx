@@ -22,7 +22,7 @@ function StatCard({
 	return (
 		<div
 			className={cn(
-				"rounded-[calc(var(--radius)*1.15)] border border-border/80 bg-card/90 p-5 shadow-[var(--shadow-card)]",
+				"surface-panel rounded-[calc(var(--radius)*1.15)] p-5",
 				className,
 			)}
 		>
@@ -36,7 +36,7 @@ function StatCard({
 					</div>
 				</div>
 				{icon ? (
-					<div className="rounded-full border border-border/80 bg-muted p-3 text-primary">
+					<div className="rounded-full border border-white/65 bg-[linear-gradient(135deg,rgb(255_255_255_/_0.78),rgb(233_242_249_/_0.72))] p-3 text-primary shadow-[inset_0_1px_0_rgb(255_255_255_/_0.55)]">
 						{icon}
 					</div>
 				) : null}
