@@ -140,11 +140,6 @@ export default async function OrganizationMembersPage({
 
 	return (
 		<div className="space-y-6">
-			<DashboardHeader
-				title="Members"
-				description="View and manage members across all of your memberships."
-			/>
-
 			<MemberFilters
 				memberships={filterOptions.memberships}
 				tiers={filterOptions.tiers}

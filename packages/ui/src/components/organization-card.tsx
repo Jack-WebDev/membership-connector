@@ -54,7 +54,7 @@ function OrganizationCard({
 			) : null}
 			<Button
 				variant="outline"
-				className="w-full justify-between"
+				className="flex w-fit items-center justify-between justify-self-end"
 				render={href ? <a href={href} /> : undefined}
 			>
 				{ctaLabel}

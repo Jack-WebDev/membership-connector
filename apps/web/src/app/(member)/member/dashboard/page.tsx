@@ -54,11 +54,6 @@ export default async function MemberDashboardPage() {
 
 	return (
 		<div className="space-y-6">
-			<DashboardHeader
-				title="Dashboard"
-				description="A snapshot of your applications, active memberships, and what's new."
-			/>
-
 			<div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
 				<StatCard
 					label="Active memberships"
@@ -120,11 +115,11 @@ export default async function MemberDashboardPage() {
 					</section>
 
 					<section className="space-y-4">
-						<h2 className="font-(family-name:--font-display) text-2xl text-foreground">
+						<h2 className="font-display text-2xl text-foreground">
 							Recommended for you
 						</h2>
 						{recommended.items.length > 0 ? (
-							<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+							<div className="grid gap-6 sm:grid-cols-2">
 								{recommended.items.map((membership) => (
 									<MembershipCard
 										key={membership.id}

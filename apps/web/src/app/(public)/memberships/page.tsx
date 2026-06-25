@@ -73,7 +73,7 @@ export default async function MembershipsPage({
 			<SectionHeader
 				eyebrow="Memberships"
 				title="Find a membership that's right for you"
-				description="Use the filters below to narrow things down, or search by name. There's no cost to browse."
+				description="Use the filters below to narrow things down, or search by name."
 			/>
 			<MembershipFilters categories={filterOptions.categories} />
 			<p className="text-muted-foreground text-sm">

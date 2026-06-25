@@ -88,7 +88,7 @@ function ApplicationFilters({ memberships, tiers }: ApplicationFiltersProps) {
 				},
 			]}
 			trailing={
-				<>
+				<div className="flex items-center justify-center">
 					<div className="grid gap-2">
 						<Label className="font-semibold text-[0.68rem] text-muted-foreground uppercase tracking-[0.2em]">
 							Submitted from
@@ -121,7 +121,7 @@ function ApplicationFilters({ memberships, tiers }: ApplicationFiltersProps) {
 						onChange={(event) => debouncedUpdateSearch(event.target.value)}
 					/>
 					<FilterBarReset onClick={() => router.replace(pathname as Route)} />
-				</>
+				</div>
 			}
 		/>
 	);

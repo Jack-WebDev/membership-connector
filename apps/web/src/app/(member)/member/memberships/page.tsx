@@ -97,11 +97,6 @@ export default async function MemberMembershipsPage({
 
 	return (
 		<div className="space-y-6">
-			<DashboardHeader
-				title="Memberships"
-				description="Your active and past memberships across every organization you've joined."
-			/>
-
 			<MembershipFilters />
 
 			<DataTable

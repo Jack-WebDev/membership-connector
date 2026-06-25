@@ -46,7 +46,7 @@ export default async function OrganizationsPage({
 		<div className="space-y-6">
 			<SectionHeader
 				eyebrow="Organizations"
-				title="Groups and clubs you can join"
+				title="Groups and memberships you can join"
 				description="Browse the organizations below to see what each one offers."
 				actions={<OrganizationSearch />}
 			/>
@@ -73,7 +73,7 @@ export default async function OrganizationsPage({
 			) : (
 				<EmptyState
 					title="No organizations match your search"
-					description="Try a different search term to find a group or club."
+					description="Try a different search term to find a group or membership."
 				/>
 			)}
 			{totalPages > 1 ? (

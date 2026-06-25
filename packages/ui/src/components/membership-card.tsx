@@ -66,7 +66,7 @@ function MembershipCard({
 				</div>
 			</div>
 			<Button
-				className="w-full justify-between"
+				className="w-fit justify-between"
 				render={href ? <a href={href} /> : undefined}
 			>
 				{ctaLabel}

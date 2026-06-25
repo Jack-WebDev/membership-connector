@@ -140,11 +140,6 @@ export default async function OrganizationApplicationsPage({
 
 	return (
 		<div className="space-y-6">
-			<DashboardHeader
-				title="Applications"
-				description="Review submitted applications, request more information, and approve or reject members."
-			/>
-
 			<ApplicationFilters
 				memberships={filterOptions.memberships}
 				tiers={filterOptions.tiers}

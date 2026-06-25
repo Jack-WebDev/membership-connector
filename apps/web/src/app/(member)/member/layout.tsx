@@ -20,8 +20,6 @@ export default async function MemberLayout({
 
 	return (
 		<AppShell
-			title="Member area"
-			subtitle="Applications, memberships, and saved items"
 			items={memberNavItems("/member", unreadCount)}
 			defaultOpen={defaultOpen}
 			notificationBell={{

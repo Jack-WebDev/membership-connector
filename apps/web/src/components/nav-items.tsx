@@ -17,12 +17,16 @@ import {
 	UsersIcon,
 } from "lucide-react";
 
-export const publicNavItems: NavigationItem[] = [
-	{ label: "Home", href: "/" },
+export const publicNavItems = (isAuthenticated = false): NavigationItem[] => [
+	...(isAuthenticated ? [] : [{ label: "Home", href: "/" }]),
 	{ label: "Memberships", href: "/memberships" },
 	{ label: "Organizations", href: "/organizations" },
-	{ label: "Login", href: "/auth/login" },
-	{ label: "Register", href: "/auth/register" },
+	...(isAuthenticated
+		? []
+		: [
+				{ label: "Login", href: "/auth/login" },
+				{ label: "Register", href: "/auth/register" },
+			]),
 ];
 
 export const memberNavItems = (
@@ -44,27 +48,27 @@ export const memberNavItems = (
 		href: `${basePath}/memberships`,
 		icon: <BadgeCheckIcon className="size-4" />,
 	},
-	{
-		label: "Browse",
-		href: `${basePath}/browse`,
-		icon: <SearchIcon className="size-4" />,
-	},
-	{
-		label: "Saved",
-		href: `${basePath}/saved`,
-		icon: <FolderHeartIcon className="size-4" />,
-	},
+	// {
+	// 	label: "Browse",
+	// 	href: `${basePath}/browse`,
+	// 	icon: <SearchIcon className="size-4" />,
+	// },
+	// {
+	// 	label: "Saved",
+	// 	href: `${basePath}/saved`,
+	// 	icon: <FolderHeartIcon className="size-4" />,
+	// },
 	{
 		label: "Notifications",
 		href: `${basePath}/notifications`,
 		icon: <BellIcon className="size-4" />,
 		badge: unreadNotifications > 0 ? unreadNotifications : undefined,
 	},
-	{
-		label: "Settings",
-		href: `${basePath}/settings`,
-		icon: <Settings2Icon className="size-4" />,
-	},
+	// {
+	// 	label: "Settings",
+	// 	href: `${basePath}/settings`,
+	// 	icon: <Settings2Icon className="size-4" />,
+	// },
 ];
 
 export const organizationNavItems = (

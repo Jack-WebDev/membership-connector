@@ -156,11 +156,6 @@ export default async function OrganizationDashboardPage({
 
 	return (
 		<div className="space-y-6">
-			<DashboardHeader
-				title="Dashboard"
-				description="A snapshot of members, applications, and activity across your organization."
-			/>
-
 			<div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
 				<StatCard
 					label="Active members"

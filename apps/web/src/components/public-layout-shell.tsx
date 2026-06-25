@@ -6,6 +6,7 @@ import { cn } from "@membership-connector-app/ui/lib/utils";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { renderNavigationLink } from "./link-renderer";
 import { publicNavItems, withActiveItems } from "./nav-items";
 
@@ -15,7 +16,8 @@ export default function PublicLayoutShell({
 	children: React.ReactNode;
 }) {
 	const pathname = usePathname();
-	const navItems = withActiveItems(publicNavItems, pathname);
+	const { data: session } = authClient.useSession();
+	const navItems = withActiveItems(publicNavItems(!!session), pathname);
 
 	return (
 		<div className="min-h-screen">
@@ -28,11 +30,11 @@ export default function PublicLayoutShell({
 							renderLink={renderNavigationLink}
 						/>
 						<Link href="/" className="flex items-center gap-3">
-							<span className="font-(family-name:--font-display) inline-flex size-11 items-center justify-center rounded-full border border-border/80 bg-card text-primary text-xl shadow-[var(--shadow-card)]">
+							<span className="inline-flex size-11 items-center justify-center rounded-full border border-border/80 bg-card font-display text-primary text-xl shadow-(--shadow-card)">
 								MC
 							</span>
 							<span>
-								<span className="font-(family-name:--font-display) block text-2xl text-foreground leading-none">
+								<span className="block font-display text-2xl text-foreground leading-none">
 									Membership Connector
 								</span>
 							</span>
@@ -46,7 +48,7 @@ export default function PublicLayoutShell({
 								className={cn(
 									"rounded-full px-4 py-2 text-sm transition-colors",
 									item.active
-										? "bg-card text-foreground shadow-[var(--shadow-card)]"
+										? "bg-card text-foreground shadow-(--shadow-card)"
 										: "text-muted-foreground hover:text-foreground",
 								)}
 							>
@@ -54,14 +56,16 @@ export default function PublicLayoutShell({
 							</Link>
 						))}
 					</nav>
-					<div className="hidden items-center gap-2 sm:flex">
-						<Link href="/auth/login">
-							<Button variant="ghost">Login</Button>
-						</Link>
-						<Link href="/auth/register">
-							<Button>Get started</Button>
-						</Link>
-					</div>
+					{!session && (
+						<div className="hidden items-center gap-2 sm:flex">
+							<Link href="/auth/login">
+								<Button variant="ghost">Login</Button>
+							</Link>
+							<Link href="/auth/register">
+								<Button>Get started</Button>
+							</Link>
+						</div>
+					)}
 				</div>
 			</header>
 			<div className="mx-auto max-w-380 px-4 py-8 sm:px-6 lg:px-8">

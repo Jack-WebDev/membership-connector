@@ -20,7 +20,7 @@ const steps = [
 		number: "1",
 		title: "Browse memberships",
 		description:
-			"Look through clubs and groups near you. No account needed to look around.",
+			"Look through memberships and groups near you. No account needed to look around.",
 	},
 	{
 		number: "2",
@@ -49,19 +49,18 @@ export default async function HomePage() {
 		<div className="space-y-14 pb-10">
 			<PageHeader
 				align="center"
-				eyebrow="Welcome"
-				title="Find a club or group you'll love"
-				description="Search thousands of clubs and community groups, or browse by category. Joining takes just a few minutes — no computer experience needed."
+				title="Find a membership you'll love"
+				description="Search memberships and community groups. Joining takes just a few minutes"
 				actions={
 					<form
 						action="/memberships"
 						method="GET"
-						className="flex w-full max-w-xl flex-col items-center gap-3 sm:flex-row"
+						className="flex w-full max-w-3xl flex-col items-center gap-3 sm:flex-row"
 					>
 						<SearchInput
 							name="search"
-							placeholder="Search by club name, e.g. 'gardening' or 'bowls'"
-							className="w-full sm:flex-1"
+							placeholder="Search by membership name"
+							className="w-full max-w-xl"
 							aria-label="Search memberships"
 						/>
 						<Button type="submit" size="lg" className="w-full sm:w-auto">

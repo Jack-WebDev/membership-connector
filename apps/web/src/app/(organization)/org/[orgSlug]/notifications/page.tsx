@@ -45,10 +45,6 @@ export default async function OrganizationNotificationsPage({
 
 	return (
 		<div className="space-y-6">
-			<DashboardHeader
-				title="Notifications"
-				description="Updates about applications, members, finances, and announcements for your organization."
-			/>
 			<div className="flex justify-end">
 				<NotificationSearch />
 			</div>

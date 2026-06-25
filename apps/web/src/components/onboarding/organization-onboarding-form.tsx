@@ -93,30 +93,6 @@ export function OrganizationOnboardingForm() {
 				)}
 			</form.Field>
 
-			<form.Field name="slug">
-				{(field) => (
-					<div className="space-y-2">
-						<Label htmlFor={field.name}>Slug</Label>
-						<Input
-							id={field.name}
-							name={field.name}
-							value={field.state.value}
-							onBlur={field.handleBlur}
-							onChange={(e) => {
-								slugTouched.current = true;
-								field.handleChange(slugify(e.target.value));
-							}}
-							placeholder="lulafi-business-network"
-						/>
-						{field.state.meta.errors.map((error) => (
-							<p key={error?.message} className="text-destructive text-sm">
-								{error?.message}
-							</p>
-						))}
-					</div>
-				)}
-			</form.Field>
-
 			<form.Field name="email">
 				{(field) => (
 					<div className="space-y-2">
@@ -212,7 +188,7 @@ export function OrganizationOnboardingForm() {
 					<Button
 						type="submit"
 						size="lg"
-						className="sm:col-span-2"
+						className="w-fit justify-self-end py-4 sm:col-span-2"
 						disabled={!canSubmit || isSubmitting}
 					>
 						{isSubmitting ? "Creating..." : "Create organization"}

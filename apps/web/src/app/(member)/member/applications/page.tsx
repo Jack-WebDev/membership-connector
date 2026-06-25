@@ -96,11 +96,6 @@ export default async function MemberApplicationsPage({
 
 	return (
 		<div className="space-y-6">
-			<DashboardHeader
-				title="Applications"
-				description="Track the memberships you've applied to and pick up any drafts you haven't finished yet."
-			/>
-
 			<ApplicationFilters />
 
 			<DataTable

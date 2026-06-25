@@ -8,6 +8,13 @@ import {
 } from "@membership-connector-app/ui/components/native-select";
 import { cn } from "@membership-connector-app/ui/lib/utils";
 import type * as React from "react";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "./select";
 
 export type FilterOption = {
 	label: string;
@@ -35,7 +42,7 @@ function FilterBar({
 	return (
 		<div
 			className={cn(
-				"flex flex-col gap-3 rounded-[calc(var(--radius)*1.1)] border border-border/80 bg-card/85 p-4 shadow-[var(--shadow-card)] sm:flex-row sm:flex-wrap sm:items-end sm:justify-between",
+				"flex flex-col gap-3 rounded-[calc(var(--radius)*1.1)] border border-border/80 bg-card/85 p-4 shadow-(--shadow-card) sm:flex-row sm:flex-wrap sm:items-end sm:justify-between",
 				className,
 			)}
 		>
@@ -45,20 +52,31 @@ function FilterBar({
 						<Label className="font-semibold text-[0.68rem] text-muted-foreground uppercase tracking-[0.2em]">
 							{filter.label}
 						</Label>
-						<NativeSelect
-							className="min-w-44 rounded-lg"
+
+						<Select
 							value={filter.value}
-							onChange={(event) => filter.onValueChange?.(event.target.value)}
+							onValueChange={(value) => filter.onValueChange?.(value as string)}
 						>
-							<NativeSelectOption value="">
-								{filter.placeholder ?? `All ${filter.label.toLowerCase()}`}
-							</NativeSelectOption>
-							{filter.options.map((option) => (
-								<NativeSelectOption key={option.value} value={option.value}>
-									{option.label}
-								</NativeSelectOption>
-							))}
-						</NativeSelect>
+							<SelectTrigger className="min-w-44 rounded-xl">
+								<SelectValue
+									placeholder={
+										filter.placeholder ?? `All ${filter.label.toLowerCase()}`
+									}
+								/>
+							</SelectTrigger>
+
+							<SelectContent>
+								<SelectItem value="">
+									{filter.placeholder ?? `All ${filter.label.toLowerCase()}`}
+								</SelectItem>
+
+								{filter.options.map((option) => (
+									<SelectItem key={option.value} value={option.value}>
+										{option.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
 				))}
 			</div>
