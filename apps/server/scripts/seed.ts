@@ -278,12 +278,17 @@ async function main() {
 
 	console.info("Creating memberships and tiers...");
 
+	const categoryRows = await db.query.categories.findMany();
+	const categoryIdBySlug = new Map(
+		categoryRows.map((category) => [category.slug, category.id]),
+	);
+
 	const membershipInputs: {
 		key: MembershipKey;
 		orgKey: OrgKey;
 		name: string;
 		slug: string;
-		category: string;
+		categorySlug: string;
 		shortDescription: string;
 		description: string;
 		targetStatus: "draft" | "published" | "paused";
@@ -293,7 +298,7 @@ async function main() {
 			orgKey: "lulafi",
 			name: "Startup Founder Circle",
 			slug: "startup-founder-circle",
-			category: "Business",
+			categorySlug: "business",
 			shortDescription:
 				"A circle for early-stage startup founders to connect and grow.",
 			description:
@@ -305,7 +310,7 @@ async function main() {
 			orgKey: "lulafi",
 			name: "Small Business Growth Club",
 			slug: "small-business-growth-club",
-			category: "Business",
+			categorySlug: "business",
 			shortDescription: "Tools and community for growing small businesses.",
 			description:
 				"Small Business Growth Club helps established small business owners scale through workshops and mentorship.",
@@ -316,7 +321,7 @@ async function main() {
 			orgKey: "lulafi",
 			name: "Local Entrepreneur Network",
 			slug: "local-entrepreneur-network",
-			category: "Business",
+			categorySlug: "business",
 			shortDescription: "Connecting local entrepreneurs in your area.",
 			description:
 				"Local Entrepreneur Network is a regional community for entrepreneurs to collaborate and trade leads.",
@@ -327,7 +332,7 @@ async function main() {
 			orgKey: "cpa",
 			name: "Student Creative Network",
 			slug: "student-creative-network",
-			category: "Creative",
+			categorySlug: "creative",
 			shortDescription: "A free network for creative students.",
 			description:
 				"Student Creative Network gives design and arts students access to mentorship and portfolio feedback.",
@@ -338,7 +343,7 @@ async function main() {
 			orgKey: "cpa",
 			name: "Professional Design Guild",
 			slug: "professional-design-guild",
-			category: "Creative",
+			categorySlug: "creative",
 			shortDescription: "A guild for working design professionals.",
 			description:
 				"Professional Design Guild connects working designers with paid opportunities and continued education.",
@@ -349,7 +354,7 @@ async function main() {
 			orgKey: "cpa",
 			name: "Creative Partner Access",
 			slug: "creative-partner-access",
-			category: "Creative",
+			categorySlug: "creative",
 			shortDescription: "Early access program for creative partners.",
 			description:
 				"Creative Partner Access is an in-progress partner program still being finalized.",
@@ -360,7 +365,7 @@ async function main() {
 			orgKey: "wellness",
 			name: "Premium Wellness Access",
 			slug: "premium-wellness-access",
-			category: "Wellness",
+			categorySlug: "wellness",
 			shortDescription: "Full access to wellness facilities and classes.",
 			description:
 				"Premium Wellness Access gives members full access to studio classes and wellness facilities.",
@@ -371,7 +376,7 @@ async function main() {
 			orgKey: "wellness",
 			name: "Health Coaching Circle",
 			slug: "health-coaching-circle",
-			category: "Wellness",
+			categorySlug: "wellness",
 			shortDescription: "Group and 1:1 health coaching access.",
 			description:
 				"Health Coaching Circle offers introductory and ongoing coaching programs for members.",
@@ -389,13 +394,18 @@ async function main() {
 	>;
 
 	for (const input of membershipInputs) {
+		const categoryId = categoryIdBySlug.get(input.categorySlug);
+		if (!categoryId) {
+			throw new Error(`Unknown category slug: ${input.categorySlug}`);
+		}
+
 		const { membershipId } = await createMembership(
 			orgIds[input.orgKey],
 			owners[input.orgKey],
 			{
 				name: input.name,
 				slug: input.slug,
-				category: input.category,
+				categoryId,
 				shortDescription: input.shortDescription,
 				description: input.description,
 				visibility: "public",

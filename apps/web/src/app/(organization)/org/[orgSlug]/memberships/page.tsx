@@ -167,7 +167,7 @@ export default async function OrganizationMembershipsPage({
 					{
 						id: "category",
 						header: "Category",
-						cell: (row) => row.category ?? "—",
+						cell: (row) => row.categoryName,
 					},
 					{
 						id: "visibility",

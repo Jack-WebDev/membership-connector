@@ -13,6 +13,7 @@ import {
 	getPublicMembershipBySlug,
 	isMembershipSavedByUser,
 	listAdminMemberships,
+	listCategoryOptions,
 	listPublicMembershipFilterOptions,
 	listPublicMemberships,
 	listSavedMembershipsForUser,
@@ -39,6 +40,8 @@ export const membershipRouter = router({
 	listFilterOptions: publicProcedure.query(() =>
 		listPublicMembershipFilterOptions(),
 	),
+
+	listCategories: publicProcedure.query(() => listCategoryOptions()),
 
 	getPublicBySlug: publicProcedure
 		.input(getPublicMembershipInput)

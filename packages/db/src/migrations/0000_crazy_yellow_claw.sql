@@ -144,6 +144,15 @@ CREATE TABLE "finance_transactions" (
 	CONSTRAINT "finance_transactions_amount_non_negative_check" CHECK ("finance_transactions"."amount" >= 0)
 );
 --> statement-breakpoint
+CREATE TABLE "categories" (
+	"id" text PRIMARY KEY NOT NULL,
+	"slug" text NOT NULL,
+	"name" text NOT NULL,
+	"sort_order" integer DEFAULT 0 NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "membership_applications" (
 	"id" text PRIMARY KEY NOT NULL,
 	"membership_id" text NOT NULL,
@@ -203,7 +212,7 @@ CREATE TABLE "memberships" (
 	"short_description" text,
 	"status" "membership_status" DEFAULT 'draft' NOT NULL,
 	"visibility" "membership_visibility" DEFAULT 'public' NOT NULL,
-	"category" text,
+	"category_id" text NOT NULL,
 	"application_required" boolean DEFAULT true NOT NULL,
 	"public_announcements_enabled" boolean DEFAULT false NOT NULL,
 	"members_only_content_enabled" boolean DEFAULT false NOT NULL,
@@ -285,6 +294,7 @@ ALTER TABLE "membership_members" ADD CONSTRAINT "membership_members_user_id_user
 ALTER TABLE "membership_members" ADD CONSTRAINT "membership_members_application_id_membership_applications_id_fk" FOREIGN KEY ("application_id") REFERENCES "public"."membership_applications"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "membership_tiers" ADD CONSTRAINT "membership_tiers_membership_id_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."memberships"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "memberships" ADD CONSTRAINT "memberships_organization_id_organizations_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "memberships" ADD CONSTRAINT "memberships_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "saved_memberships" ADD CONSTRAINT "saved_memberships_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "saved_memberships" ADD CONSTRAINT "saved_memberships_membership_id_memberships_id_fk" FOREIGN KEY ("membership_id") REFERENCES "public"."memberships"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -308,6 +318,7 @@ CREATE INDEX "session_userId_idx" ON "session" USING btree ("user_id");--> state
 CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");--> statement-breakpoint
 CREATE INDEX "finance_transactions_organization_id_idx" ON "finance_transactions" USING btree ("organization_id");--> statement-breakpoint
 CREATE INDEX "finance_transactions_status_idx" ON "finance_transactions" USING btree ("status");--> statement-breakpoint
+CREATE UNIQUE INDEX "categories_slug_unique" ON "categories" USING btree ("slug");--> statement-breakpoint
 CREATE INDEX "membership_applications_user_id_idx" ON "membership_applications" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "membership_applications_organization_id_idx" ON "membership_applications" USING btree ("organization_id");--> statement-breakpoint
 CREATE INDEX "membership_applications_status_idx" ON "membership_applications" USING btree ("status");--> statement-breakpoint
@@ -321,6 +332,7 @@ CREATE INDEX "memberships_organization_id_idx" ON "memberships" USING btree ("or
 CREATE INDEX "memberships_slug_idx" ON "memberships" USING btree ("slug");--> statement-breakpoint
 CREATE INDEX "memberships_status_idx" ON "memberships" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "memberships_visibility_idx" ON "memberships" USING btree ("visibility");--> statement-breakpoint
+CREATE INDEX "memberships_category_id_idx" ON "memberships" USING btree ("category_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "saved_memberships_user_id_membership_id_unique" ON "saved_memberships" USING btree ("user_id","membership_id");--> statement-breakpoint
 CREATE INDEX "saved_memberships_membership_id_idx" ON "saved_memberships" USING btree ("membership_id");--> statement-breakpoint
 CREATE INDEX "notifications_user_id_idx" ON "notifications" USING btree ("user_id");--> statement-breakpoint

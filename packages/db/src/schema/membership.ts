@@ -62,6 +62,18 @@ export const membershipMemberStatusEnum = pgEnum("membership_member_status", [
 	"suspended",
 ]);
 
+export const categories = pgTable(
+	"categories",
+	{
+		id: text("id").primaryKey(),
+		slug: text("slug").notNull(),
+		name: text("name").notNull(),
+		sortOrder: integer("sort_order").notNull().default(0),
+		...timestamps,
+	},
+	(table) => [uniqueIndex("categories_slug_unique").on(table.slug)],
+);
+
 export const memberships = pgTable(
 	"memberships",
 	{
@@ -77,7 +89,9 @@ export const memberships = pgTable(
 		visibility: membershipVisibilityEnum("visibility")
 			.notNull()
 			.default("public"),
-		category: text("category"),
+		categoryId: text("category_id")
+			.notNull()
+			.references(() => categories.id),
 		applicationRequired: boolean("application_required")
 			.notNull()
 			.default(true),
@@ -98,6 +112,7 @@ export const memberships = pgTable(
 		index("memberships_slug_idx").on(table.slug),
 		index("memberships_status_idx").on(table.status),
 		index("memberships_visibility_idx").on(table.visibility),
+		index("memberships_category_id_idx").on(table.categoryId),
 	],
 );
 
@@ -238,10 +253,18 @@ export const membershipRelations = relations(memberships, ({ many, one }) => ({
 		fields: [memberships.organizationId],
 		references: [organizations.id],
 	}),
+	category: one(categories, {
+		fields: [memberships.categoryId],
+		references: [categories.id],
+	}),
 	tiers: many(membershipTiers),
 	applications: many(membershipApplications),
 	members: many(membershipMembers),
 	savedByUsers: many(savedMemberships),
+}));
+
+export const categoryRelations = relations(categories, ({ many }) => ({
+	memberships: many(memberships),
 }));
 
 export const membershipTierRelations = relations(

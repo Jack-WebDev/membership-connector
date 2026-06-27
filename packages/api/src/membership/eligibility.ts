@@ -63,7 +63,7 @@ export function membershipMatchesSearch(
 		name: string;
 		shortDescription: string | null;
 		description: string | null;
-		category: string | null;
+		category: { name: string };
 	},
 	organizationName: string,
 	search: string | undefined,
@@ -76,7 +76,7 @@ export function membershipMatchesSearch(
 		membership.name,
 		membership.shortDescription,
 		membership.description,
-		membership.category,
+		membership.category.name,
 		organizationName,
 	]
 		.filter(Boolean)

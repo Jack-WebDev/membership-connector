@@ -23,7 +23,11 @@ const PRICING_OPTIONS = [
 	{ label: "Paid", value: "paid" },
 ];
 
-function MembershipFilters({ categories }: { categories: string[] }) {
+function MembershipFilters({
+	categories,
+}: {
+	categories: { slug: string; name: string }[];
+}) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
@@ -56,8 +60,8 @@ function MembershipFilters({ categories }: { categories: string[] }) {
 					placeholder: "All categories",
 					value: searchParams.get("category") ?? "",
 					options: categories.map((category) => ({
-						label: category,
-						value: category,
+						label: category.name,
+						value: category.slug,
 					})),
 					onValueChange: (value) => updateParam("category", value),
 				},

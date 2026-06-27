@@ -107,7 +107,7 @@ export default async function MembershipDetailPage({
 						<dt className="text-muted-foreground text-xs uppercase tracking-wide">
 							Category
 						</dt>
-						<dd className="text-sm">{membership.category ?? "—"}</dd>
+						<dd className="text-sm">{membership.categoryName}</dd>
 					</div>
 					<div>
 						<dt className="text-muted-foreground text-xs uppercase tracking-wide">

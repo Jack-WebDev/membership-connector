@@ -3,6 +3,7 @@ import { ErrorState } from "@membership-connector-app/ui/components/error-state"
 import { FormSection } from "@membership-connector-app/ui/components/form-section";
 
 import { requireOrganizationSession } from "@/lib/server-auth";
+import { serverTrpcAuthed } from "@/utils/trpc-server";
 
 import { MembershipForm } from "../_components/membership-form";
 
@@ -30,12 +31,19 @@ export default async function NewMembershipPage({
 		);
 	}
 
+	const categoryOptions =
+		await serverTrpcAuthed.membership.listCategories.query();
+
 	return (
 		<FormSection
 			title="New membership"
 			description="It will be created as a draft. Publish it when you're ready for it to appear publicly."
 		>
-			<MembershipForm orgSlug={orgSlug} mode="create" />
+			<MembershipForm
+				orgSlug={orgSlug}
+				mode="create"
+				categoryOptions={categoryOptions}
+			/>
 		</FormSection>
 	);
 }

@@ -64,6 +64,7 @@ export type PublicMembershipSummary = {
 	slug: string;
 	shortDescription: string | null;
 	category: string;
+	categorySlug: string;
 	status: "draft" | "published" | "paused" | "archived";
 	organizationId: string;
 	organizationName: string;
@@ -114,7 +115,7 @@ const membershipEditableFields = {
 			membershipSlugPattern,
 			"Use lowercase letters, numbers, and hyphens only",
 		),
-	category: z.string().trim().max(160).optional(),
+	categoryId: z.string().trim().min(1, "Category is required"),
 	shortDescription: z.string().trim().max(280).optional(),
 	description: z.string().trim().max(4000).optional(),
 	visibility: z.enum(membershipVisibilityValues),
@@ -154,7 +155,8 @@ export type AdminMembershipSummary = {
 	id: string;
 	name: string;
 	slug: string;
-	category: string | null;
+	categoryId: string;
+	categoryName: string;
 	shortDescription: string | null;
 	status: (typeof membershipStatusValues)[number];
 	visibility: (typeof membershipVisibilityValues)[number];
@@ -181,7 +183,8 @@ export type AdminMembershipDetail = {
 	organizationId: string;
 	name: string;
 	slug: string;
-	category: string | null;
+	categoryId: string;
+	categoryName: string;
 	shortDescription: string | null;
 	description: string | null;
 	status: (typeof membershipStatusValues)[number];
@@ -200,4 +203,10 @@ export type AdminMembershipStats = {
 	paused: number;
 	archived: number;
 	total: number;
+};
+
+export type CategoryOption = {
+	id: string;
+	slug: string;
+	name: string;
 };

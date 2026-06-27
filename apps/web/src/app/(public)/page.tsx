@@ -49,10 +49,9 @@ export default async function HomePage() {
 		<div className="space-y-16 pb-12">
 			<PageHeader
 				className="section-wash"
-				eyebrow="Trusted memberships"
 				align="center"
 				title="Find a membership you'll love"
-				description="Search memberships and community groups with a calm, guided experience built to feel as trustworthy as the institutions behind them."
+				description="Search memberships and community groups"
 				actions={
 					<form
 						action="/memberships"

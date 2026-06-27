@@ -33,17 +33,20 @@ export default async function EditMembershipPage({
 		);
 	}
 
-	const membership = await serverTrpcAuthed.membership.adminGet
-		.query({ organizationSlug: orgSlug, membershipId })
-		.catch((error) => {
-			if (
-				error instanceof TRPCClientError &&
-				error.data?.code === "NOT_FOUND"
-			) {
-				return null;
-			}
-			throw error;
-		});
+	const [membership, categoryOptions] = await Promise.all([
+		serverTrpcAuthed.membership.adminGet
+			.query({ organizationSlug: orgSlug, membershipId })
+			.catch((error) => {
+				if (
+					error instanceof TRPCClientError &&
+					error.data?.code === "NOT_FOUND"
+				) {
+					return null;
+				}
+				throw error;
+			}),
+		serverTrpcAuthed.membership.listCategories.query(),
+	]);
 
 	if (!membership) {
 		notFound();
@@ -58,10 +61,11 @@ export default async function EditMembershipPage({
 				orgSlug={orgSlug}
 				mode="edit"
 				membershipId={membership.id}
+				categoryOptions={categoryOptions}
 				defaultValues={{
 					name: membership.name,
 					slug: membership.slug,
-					category: membership.category ?? "",
+					categoryId: membership.categoryId,
 					shortDescription: membership.shortDescription ?? "",
 					description: membership.description ?? "",
 					visibility: membership.visibility,

@@ -18,6 +18,8 @@ DROP INDEX IF EXISTS "saved_memberships_membership_id_idx";
 --> statement-breakpoint
 DROP INDEX IF EXISTS "saved_memberships_user_id_membership_id_unique";
 --> statement-breakpoint
+DROP INDEX IF EXISTS "memberships_category_id_idx";
+--> statement-breakpoint
 DROP INDEX IF EXISTS "memberships_visibility_idx";
 --> statement-breakpoint
 DROP INDEX IF EXISTS "memberships_status_idx";
@@ -43,6 +45,8 @@ DROP INDEX IF EXISTS "membership_applications_status_idx";
 DROP INDEX IF EXISTS "membership_applications_organization_id_idx";
 --> statement-breakpoint
 DROP INDEX IF EXISTS "membership_applications_user_id_idx";
+--> statement-breakpoint
+DROP INDEX IF EXISTS "categories_slug_unique";
 --> statement-breakpoint
 DROP INDEX IF EXISTS "finance_transactions_status_idx";
 --> statement-breakpoint
@@ -89,6 +93,8 @@ ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "notifications_user_id_use
 ALTER TABLE "saved_memberships" DROP CONSTRAINT IF EXISTS "saved_memberships_membership_id_memberships_id_fk";
 --> statement-breakpoint
 ALTER TABLE "saved_memberships" DROP CONSTRAINT IF EXISTS "saved_memberships_user_id_user_id_fk";
+--> statement-breakpoint
+ALTER TABLE "memberships" DROP CONSTRAINT IF EXISTS "memberships_category_id_categories_id_fk";
 --> statement-breakpoint
 ALTER TABLE "memberships" DROP CONSTRAINT IF EXISTS "memberships_organization_id_organizations_id_fk";
 --> statement-breakpoint
@@ -167,6 +173,8 @@ DROP TABLE IF EXISTS "membership_tiers";
 DROP TABLE IF EXISTS "membership_members";
 --> statement-breakpoint
 DROP TABLE IF EXISTS "membership_applications";
+--> statement-breakpoint
+DROP TABLE IF EXISTS "categories";
 --> statement-breakpoint
 DROP TABLE IF EXISTS "finance_transactions";
 --> statement-breakpoint

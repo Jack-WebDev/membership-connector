@@ -31,7 +31,7 @@ function slugify(value: string) {
 type MembershipFormValues = {
 	name: string;
 	slug: string;
-	category: string;
+	categoryId: string;
 	shortDescription: string;
 	description: string;
 	visibility: "public" | "private" | "invite_only";
@@ -44,13 +44,14 @@ type MembershipFormProps = {
 	orgSlug: string;
 	mode: "create" | "edit";
 	membershipId?: string;
+	categoryOptions: { id: string; name: string }[];
 	defaultValues?: MembershipFormValues;
 };
 
 const EMPTY_VALUES: MembershipFormValues = {
 	name: "",
 	slug: "",
-	category: "",
+	categoryId: "",
 	shortDescription: "",
 	description: "",
 	visibility: "public",
@@ -63,6 +64,7 @@ function MembershipForm({
 	orgSlug,
 	mode,
 	membershipId,
+	categoryOptions,
 	defaultValues,
 }: MembershipFormProps) {
 	const router = useRouter();
@@ -76,7 +78,10 @@ function MembershipForm({
 	);
 
 	const form = useForm({
-		defaultValues: defaultValues ?? EMPTY_VALUES,
+		defaultValues: defaultValues ?? {
+			...EMPTY_VALUES,
+			categoryId: categoryOptions[0]?.id ?? "",
+		},
 		onSubmit: async ({ value }) => {
 			try {
 				if (mode === "create") {
@@ -176,18 +181,23 @@ function MembershipForm({
 				)}
 			</form.Field>
 
-			<form.Field name="category">
+			<form.Field name="categoryId">
 				{(field) => (
 					<div className="space-y-2">
 						<Label htmlFor={field.name}>Category</Label>
-						<Input
+						<NativeSelect
 							id={field.name}
 							name={field.name}
+							className="w-full"
 							value={field.state.value}
-							onBlur={field.handleBlur}
 							onChange={(e) => field.handleChange(e.target.value)}
-							placeholder="Professional networks"
-						/>
+						>
+							{categoryOptions.map((category) => (
+								<NativeSelectOption key={category.id} value={category.id}>
+									{category.name}
+								</NativeSelectOption>
+							))}
+						</NativeSelect>
 					</div>
 				)}
 			</form.Field>

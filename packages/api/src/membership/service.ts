@@ -1,5 +1,6 @@
 import { db } from "@membership-connector-app/db";
 import {
+	categories,
 	memberships,
 	membershipTiers,
 	savedMemberships,
@@ -20,6 +21,7 @@ import type {
 	AdminMembershipDetail,
 	AdminMembershipStats,
 	AdminMembershipSummary,
+	CategoryOption,
 	CreateMembershipInput,
 	ListAdminMembershipsInput,
 	ListPublicMembershipsInput,
@@ -36,8 +38,6 @@ export {
 	membershipMatchesSearch,
 } from "./eligibility";
 
-const DEFAULT_CATEGORY = "General";
-
 type MembershipWithRelations = {
 	id: string;
 	organizationId: string;
@@ -46,7 +46,7 @@ type MembershipWithRelations = {
 	description: string | null;
 	shortDescription: string | null;
 	status: PublicMembershipSummary["status"];
-	category: string | null;
+	category: { id: string; slug: string; name: string };
 	applicationRequired: boolean;
 	createdAt: Date;
 	organization: {
@@ -64,7 +64,8 @@ function toSummary(row: MembershipWithRelations): PublicMembershipSummary {
 		name: row.name,
 		slug: row.slug,
 		shortDescription: row.shortDescription,
-		category: row.category ?? DEFAULT_CATEGORY,
+		category: row.category.name,
+		categorySlug: row.category.slug,
 		status: row.status,
 		organizationId: row.organizationId,
 		organizationName: row.organization.name,
@@ -104,6 +105,7 @@ async function findEligiblePublishedMemberships(): Promise<
 		),
 		with: {
 			organization: true,
+			category: true,
 			tiers: {
 				where: eq(membershipTiers.status, "active"),
 			},
@@ -124,11 +126,7 @@ export async function listPublicMemberships(
 				!input.organizationSlug ||
 				row.organization.slug === input.organizationSlug,
 		)
-		.filter(
-			(row) =>
-				!input.category ||
-				(row.category ?? DEFAULT_CATEGORY) === input.category,
-		)
+		.filter((row) => !input.category || row.category.slug === input.category)
 		.filter((row) =>
 			membershipMatchesBillingInterval(row.tiers, input.billingInterval),
 		)
@@ -149,14 +147,15 @@ export async function listPublicMemberships(
 }
 
 export async function listPublicMembershipFilterOptions(): Promise<{
-	categories: string[];
+	categories: { slug: string; name: string }[];
 	organizations: { slug: string; name: string }[];
 }> {
-	const eligible = await findEligiblePublishedMemberships();
-
-	const categories = Array.from(
-		new Set(eligible.map((row) => row.category ?? DEFAULT_CATEGORY)),
-	).sort();
+	const [categoryRows, eligible] = await Promise.all([
+		db.query.categories.findMany({
+			orderBy: (table, { asc }) => asc(table.sortOrder),
+		}),
+		findEligiblePublishedMemberships(),
+	]);
 
 	const organizationsBySlug = new Map<string, { slug: string; name: string }>();
 	for (const row of eligible) {
@@ -167,7 +166,10 @@ export async function listPublicMembershipFilterOptions(): Promise<{
 	}
 
 	return {
-		categories,
+		categories: categoryRows.map((category) => ({
+			slug: category.slug,
+			name: category.name,
+		})),
 		organizations: Array.from(organizationsBySlug.values()).sort((a, b) =>
 			a.name.localeCompare(b.name),
 		),
@@ -186,6 +188,7 @@ export async function getPublicMembershipBySlug(
 		),
 		with: {
 			organization: true,
+			category: true,
 			tiers: {
 				where: eq(membershipTiers.status, "active"),
 			},
@@ -273,6 +276,7 @@ export async function listSavedMembershipsForUser(
 			membership: {
 				with: {
 					organization: true,
+					category: true,
 					tiers: { where: eq(membershipTiers.status, "active") },
 				},
 			},
@@ -320,6 +324,7 @@ async function findOrganizationMembershipOrThrow(
 			eq(memberships.id, membershipId),
 			eq(memberships.organizationId, organizationId),
 		),
+		with: { category: true },
 	});
 
 	if (!membership) {
@@ -355,6 +360,19 @@ async function ensureMembershipSlugAvailable(
 	}
 }
 
+async function ensureCategoryExists(executor: DbExecutor, categoryId: string) {
+	const category = await executor.query.categories.findFirst({
+		where: eq(categories.id, categoryId),
+	});
+
+	if (!category) {
+		throw new TRPCError({
+			code: "BAD_REQUEST",
+			message: "Select a valid category",
+		});
+	}
+}
+
 export async function createMembership(
 	organizationId: string,
 	userId: string,
@@ -364,13 +382,14 @@ export async function createMembership(
 
 	await db.transaction(async (tx) => {
 		await ensureMembershipSlugAvailable(tx, organizationId, input.slug);
+		await ensureCategoryExists(tx, input.categoryId);
 
 		await tx.insert(memberships).values({
 			id: membershipId,
 			organizationId,
 			name: input.name,
 			slug: input.slug,
-			category: input.category ? input.category : null,
+			categoryId: input.categoryId,
 			shortDescription: input.shortDescription ? input.shortDescription : null,
 			description: input.description ? input.description : null,
 			status: "draft",
@@ -414,12 +433,14 @@ export async function updateMembership(
 			);
 		}
 
+		await ensureCategoryExists(tx, input.categoryId);
+
 		await tx
 			.update(memberships)
 			.set({
 				name: input.name,
 				slug: input.slug,
-				category: input.category ? input.category : null,
+				categoryId: input.categoryId,
 				shortDescription: input.shortDescription
 					? input.shortDescription
 					: null,
@@ -487,7 +508,7 @@ export async function listAdminMemberships(
 ): Promise<{ items: AdminMembershipSummary[]; total: number }> {
 	const rows = await db.query.memberships.findMany({
 		where: eq(memberships.organizationId, organizationId),
-		with: { tiers: true },
+		with: { tiers: true, category: true },
 	});
 
 	const filtered = rows
@@ -513,7 +534,8 @@ export async function listAdminMemberships(
 			id: row.id,
 			name: row.name,
 			slug: row.slug,
-			category: row.category,
+			categoryId: row.categoryId,
+			categoryName: row.category.name,
 			shortDescription: row.shortDescription,
 			status: row.status,
 			visibility: row.visibility,
@@ -567,7 +589,8 @@ export async function getAdminMembershipById(
 		organizationId: membership.organizationId,
 		name: membership.name,
 		slug: membership.slug,
-		category: membership.category,
+		categoryId: membership.categoryId,
+		categoryName: membership.category.name,
 		shortDescription: membership.shortDescription,
 		description: membership.description,
 		status: membership.status,
@@ -579,6 +602,14 @@ export async function getAdminMembershipById(
 		updatedAt: membership.updatedAt,
 		tiers: tiers.map(toAdminTier),
 	};
+}
+
+export async function listCategoryOptions(): Promise<CategoryOption[]> {
+	const rows = await db.query.categories.findMany({
+		orderBy: (table, { asc }) => asc(table.sortOrder),
+	});
+
+	return rows.map((row) => ({ id: row.id, slug: row.slug, name: row.name }));
 }
 
 export { ensureMembershipSlugAvailable, findOrganizationMembershipOrThrow };

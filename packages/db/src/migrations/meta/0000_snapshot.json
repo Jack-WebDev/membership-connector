@@ -1,5 +1,5 @@
 {
-	"id": "bddf9b73-201f-4b03-aae3-2a9239abcf3f",
+	"id": "efe4dadb-a07b-4a34-93d1-98bed31b6b05",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"version": "7",
 	"dialect": "postgresql",
@@ -1201,6 +1201,74 @@
 			},
 			"isRLSEnabled": false
 		},
+		"public.categories": {
+			"name": "categories",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"slug": {
+					"name": "slug",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"sort_order": {
+					"name": "sort_order",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"categories_slug_unique": {
+					"name": "categories_slug_unique",
+					"columns": [
+						{
+							"expression": "slug",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
 		"public.membership_applications": {
 			"name": "membership_applications",
 			"schema": "",
@@ -1800,11 +1868,11 @@
 					"notNull": true,
 					"default": "'public'"
 				},
-				"category": {
-					"name": "category",
+				"category_id": {
+					"name": "category_id",
 					"type": "text",
 					"primaryKey": false,
-					"notNull": false
+					"notNull": true
 				},
 				"application_required": {
 					"name": "application_required",
@@ -1923,6 +1991,21 @@
 					"concurrently": false,
 					"method": "btree",
 					"with": {}
+				},
+				"memberships_category_id_idx": {
+					"name": "memberships_category_id_idx",
+					"columns": [
+						{
+							"expression": "category_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
 				}
 			},
 			"foreignKeys": {
@@ -1933,6 +2016,15 @@
 					"columnsFrom": ["organization_id"],
 					"columnsTo": ["id"],
 					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"memberships_category_id_categories_id_fk": {
+					"name": "memberships_category_id_categories_id_fk",
+					"tableFrom": "memberships",
+					"tableTo": "categories",
+					"columnsFrom": ["category_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
 					"onUpdate": "no action"
 				}
 			},

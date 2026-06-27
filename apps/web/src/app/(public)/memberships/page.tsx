@@ -74,7 +74,7 @@ export default async function MembershipsPage({
 				<SectionHeader
 					eyebrow="Memberships"
 					title="Find a membership that's right for you"
-					description="Use the filters below to narrow things down with a cleaner, more deliberate browsing experience."
+					description="Use the filters below to narrow things down, or search by name."
 				/>
 			</section>
 			<MembershipFilters categories={filterOptions.categories} />
