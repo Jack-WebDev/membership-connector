@@ -7,7 +7,9 @@ import {
 } from "@membership-connector-app/db/schema/announcement";
 import { auditLogs } from "@membership-connector-app/db/schema/audit";
 import { user } from "@membership-connector-app/db/schema/auth";
+import { lulafiSubmissions } from "@membership-connector-app/db/schema/lulafi-submission";
 import {
+	categories,
 	membershipApplications,
 	membershipMembers,
 	memberships,
@@ -25,22 +27,26 @@ import type { Context } from "../context";
 export type FixtureTracker = {
 	userIds: string[];
 	organizationIds: string[];
+	categoryIds: string[];
 	membershipIds: string[];
 	membershipTierIds: string[];
 	applicationIds: string[];
 	membershipMemberIds: string[];
 	announcementIds: string[];
+	lulafiSubmissionIds: string[];
 };
 
 export function createFixtureTracker(): FixtureTracker {
 	return {
 		userIds: [],
 		organizationIds: [],
+		categoryIds: [],
 		membershipIds: [],
 		membershipTierIds: [],
 		applicationIds: [],
 		membershipMemberIds: [],
 		announcementIds: [],
+		lulafiSubmissionIds: [],
 	};
 }
 
@@ -123,16 +129,25 @@ export async function createTestMembership(
 	},
 ): Promise<string> {
 	const membershipId = crypto.randomUUID();
+	const categoryId = crypto.randomUUID();
+
+	await db.insert(categories).values({
+		id: categoryId,
+		slug: `category-${categoryId}`,
+		name: "Test Category",
+	});
 
 	await db.insert(memberships).values({
 		id: membershipId,
 		organizationId,
+		categoryId,
 		name: "Test Membership",
 		slug: `membership-${membershipId}`,
 		status: overrides?.status ?? "published",
 		visibility: overrides?.visibility ?? "public",
 	});
 
+	tracker.categoryIds.push(categoryId);
 	tracker.membershipIds.push(membershipId);
 	return membershipId;
 }
@@ -252,6 +267,46 @@ export async function createTestAnnouncement(
 	return announcementId;
 }
 
+export async function createTestLulafiSubmission(
+	tracker: FixtureTracker,
+	overrides?: {
+		externalEventId?: string;
+		displayName?: string | null;
+		formId?: string | null;
+		formTitle?: string | null;
+	},
+): Promise<string> {
+	const submissionId = crypto.randomUUID();
+
+	await db.insert(lulafiSubmissions).values({
+		id: submissionId,
+		externalEventId:
+			overrides?.externalEventId ?? `event-${crypto.randomUUID()}`,
+		source: "lulafi-chat",
+		roomId: "room-1",
+		submissionRoomId: "submission-room-1",
+		fromUserId: "user-1",
+		fromDeviceId: "device-1",
+		correlationId: "corr-1",
+		recordId: "record-1",
+		providerDirectMessageRoomId: "dm-room-1",
+		displayName: overrides?.displayName ?? "Test Sender",
+		formId: overrides?.formId ?? "form-1",
+		formVersion: "1",
+		formTitle: overrides?.formTitle ?? "Test Form",
+		rawPayload: { source: "raw" },
+		normalizedPayload: {
+			source: "readable",
+			fields: [{ key: "field-1", label: "Field 1", value: "Value 1" }],
+		},
+		submittedAt: new Date(),
+		receivedAt: new Date(),
+	});
+
+	tracker.lulafiSubmissionIds.push(submissionId);
+	return submissionId;
+}
+
 export function fakeSession(userId: string): Context["session"] {
 	return { user: { id: userId } } as unknown as Context["session"];
 }
@@ -268,6 +323,12 @@ export async function cleanupTestData(tracker: FixtureTracker): Promise<void> {
 		await db
 			.delete(auditLogs)
 			.where(inArray(auditLogs.organizationId, tracker.organizationIds));
+	}
+
+	if (tracker.lulafiSubmissionIds.length > 0) {
+		await db
+			.delete(lulafiSubmissions)
+			.where(inArray(lulafiSubmissions.id, tracker.lulafiSubmissionIds));
 	}
 
 	if (tracker.announcementIds.length > 0) {
@@ -318,6 +379,12 @@ export async function cleanupTestData(tracker: FixtureTracker): Promise<void> {
 		await db
 			.delete(memberships)
 			.where(inArray(memberships.id, tracker.membershipIds));
+	}
+
+	if (tracker.categoryIds.length > 0) {
+		await db
+			.delete(categories)
+			.where(inArray(categories.id, tracker.categoryIds));
 	}
 
 	if (tracker.organizationIds.length > 0) {

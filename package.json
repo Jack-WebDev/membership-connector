@@ -41,7 +41,7 @@
 		"db:watch": "turbo -F @membership-connector-app/db db:watch",
 		"db:stop": "turbo -F @membership-connector-app/db db:stop",
 		"db:down": "turbo -F @membership-connector-app/db db:down",
-		"db:seed": "turbo -F server seed",
+		"db:seed": "turbo -F @membership-connector-app/db db:seed",
 		"lint": "biome check --write .",
 		"prepare": "husky"
 	},

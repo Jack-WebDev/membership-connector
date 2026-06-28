@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import {
+	canAccessLulafiSubmissionInbox,
 	findAuthorizedOrganizationForUser,
 	listAccountRolesForUser,
 } from "./account-access";
@@ -32,6 +33,22 @@ export const platformAdminProcedure = protectedProcedure.use(
 			throw new TRPCError({
 				code: "FORBIDDEN",
 				message: "A platform admin account role is required",
+			});
+		}
+
+		return next({ ctx });
+	},
+);
+
+export const lulafiSubmissionInboxProcedure = protectedProcedure.use(
+	async ({ ctx, next }) => {
+		const canAccess = await canAccessLulafiSubmissionInbox(ctx.session.user.id);
+
+		if (!canAccess) {
+			throw new TRPCError({
+				code: "FORBIDDEN",
+				message:
+					"LulaFi submissions require platform admin access or organization creator access",
 			});
 		}
 

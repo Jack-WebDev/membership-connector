@@ -20,6 +20,33 @@ export async function listAccountRolesForUser(
 	return rows.map((row) => row.role);
 }
 
+export async function hasCreatedOrganization(userId: string): Promise<boolean> {
+	const [row] = await db
+		.select({ id: organizations.id })
+		.from(organizations)
+		.where(eq(organizations.createdByUserId, userId))
+		.limit(1);
+
+	return row != null;
+}
+
+export async function canAccessLulafiSubmissionInbox(
+	userId: string,
+): Promise<boolean> {
+	const roles = await listAccountRolesForUser(userId);
+
+	if (roles.includes("platform_admin")) {
+		return true;
+	}
+
+	if (await hasCreatedOrganization(userId)) {
+		return true;
+	}
+
+	const organization = await findFirstAuthorizedOrganizationForUser(userId);
+	return organization != null;
+}
+
 export async function findAuthorizedOrganizationForUser(
 	userId: string,
 	orgSlug: string,
@@ -71,6 +98,10 @@ export async function findFirstAuthorizedOrganizationForUser(userId: string) {
 }
 
 export async function getAuthenticatedHomePath(userId: string) {
+	if (await canAccessLulafiSubmissionInbox(userId)) {
+		return "/admin/submissions";
+	}
+
 	const roles = await listAccountRolesForUser(userId);
 
 	if (roles.includes("member")) {

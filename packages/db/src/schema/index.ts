@@ -3,6 +3,7 @@ export * from "./announcement";
 export * from "./audit";
 export * from "./auth";
 export * from "./finance";
+export * from "./lulafi-submission";
 export * from "./membership";
 export * from "./notification";
 export * from "./organization";

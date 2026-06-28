@@ -21,6 +21,7 @@ type SessionSummary =
 				};
 			};
 			roles: AccountRole[];
+			canAccessLulafiInbox: boolean;
 			redirectPath: string;
 			organizationAccess: {
 				organizationId: string;
@@ -163,4 +164,33 @@ export async function requireOrganizationSession(
 		session: summary.session,
 		organizationAccess: summary.organizationAccess,
 	};
+}
+
+export async function requirePlatformAdminSession(loginRedirectTo: string) {
+	const session = await requireSession(loginRedirectTo);
+	const roles = await getAccountRoles(session.user.id);
+
+	if (!roles.includes("platform_admin")) {
+		redirect(await getAuthenticatedRedirectPath(session.user.id));
+	}
+
+	return session;
+}
+
+export async function requireLulafiSubmissionInboxSession(
+	loginRedirectTo: string,
+) {
+	const summary = await getSessionSummary();
+
+	if (!summary.authenticated) {
+		redirect(
+			`/auth/login?redirectTo=${encodeURIComponent(loginRedirectTo)}` as Route,
+		);
+	}
+
+	if (!summary.canAccessLulafiInbox) {
+		redirect(summary.redirectPath as Route);
+	}
+
+	return summary.session;
 }

@@ -11,6 +11,26 @@ export const env = createEnv({
 		LULA_ISSUER: z.url(),
 		LULA_CLIENT_ID: z.string().min(1),
 		LULA_CLIENT_SECRET: z.string().min(1),
+		LULAFI_XMPP_DOMAIN: z.string().min(1).optional(),
+		LULAFI_XMPP_USER_ID: z.string().min(1).optional(),
+		LULAFI_XMPP_DEVICE_ID: z.string().min(1).optional(),
+		LULAFI_XMPP_PASSWORD: z.string().min(1).optional(),
+		LULAFI_XMPP_RESOURCE: z
+			.enum([
+				"server-client",
+				"ios-primary-client",
+				"android-primary-client",
+				"ios-secondary-client",
+				"android-secondary-client",
+			])
+			.default("server-client"),
+		LULAFI_CHAT_API_KEY: z.string().min(1).optional(),
+		LULAFI_CHAT_DISPLAY_NAME: z.string().min(1).optional(),
+		LULAFI_CHAT_CONNECT_TIMEOUT_MS: z.coerce.number().positive().default(15000),
+		LULAFI_CHAT_DEBUG: z
+			.enum(["true", "false"])
+			.transform((value) => value === "true")
+			.default(false),
 		NODE_ENV: z
 			.enum(["development", "production", "test"])
 			.default("development"),

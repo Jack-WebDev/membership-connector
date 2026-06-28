@@ -1,6 +1,7 @@
 import { announcementRouter } from "../announcement/router";
 import { financeRouter } from "../finance/router";
 import { protectedProcedure, publicProcedure, router } from "../index";
+import { lulafiSubmissionRouter } from "../lulafi-submission/router";
 import { membershipRouter } from "../membership/router";
 import { membershipApplicationRouter } from "../membership-application/router";
 import { membershipMemberRouter } from "../membership-member/router";
@@ -32,5 +33,6 @@ export const appRouter = router({
 	user: userRouter,
 	organization: organizationRouter,
 	organizationAdmin: organizationAdminRouter,
+	lulafiSubmissions: lulafiSubmissionRouter,
 });
 export type AppRouter = typeof appRouter;

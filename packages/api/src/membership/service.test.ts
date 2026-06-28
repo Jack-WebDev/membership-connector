@@ -97,7 +97,7 @@ describe("membershipMatchesSearch", () => {
 		name: "Startup Founder Circle",
 		shortDescription: "Meet other business owners",
 		description: "Full description text",
-		category: "Business",
+		category: { name: "Business" },
 	};
 
 	it("matches everything when search is empty", () => {

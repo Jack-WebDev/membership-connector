@@ -18,12 +18,14 @@
 		"db:studio": "drizzle-kit studio",
 		"db:migrate": "drizzle-kit migrate",
 		"db:rollback": "node ./scripts/rollback-migration.mjs",
+		"db:seed": "node ./scripts/seed.mjs",
 		"db:start": "docker compose up -d",
 		"db:watch": "docker compose up",
 		"db:stop": "docker compose stop",
 		"db:down": "docker compose down"
 	},
 	"dependencies": {
+		"@better-auth/utils": "^0.4.0",
 		"@membership-connector-app/env": "workspace:*",
 		"@membership-connector-app/observability": "workspace:*",
 		"dotenv": "catalog:",
@@ -35,6 +37,7 @@
 		"@membership-connector-app/config": "workspace:*",
 		"@types/pg": "^8.16.0",
 		"drizzle-kit": "^0.31.8",
+		"tsx": "^4.19.2",
 		"typescript": "catalog:"
 	}
 }

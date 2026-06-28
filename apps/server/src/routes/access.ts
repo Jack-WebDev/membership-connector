@@ -1,4 +1,5 @@
 import {
+	canAccessLulafiSubmissionInbox,
 	findAuthorizedOrganizationForUser,
 	getAuthenticatedHomePath,
 	listAccountRolesForUser,
@@ -20,6 +21,9 @@ export async function accessRoutes(app: FastifyInstance) {
 		}
 
 		const roles = await listAccountRolesForUser(session.user.id);
+		const canAccessLulafiInbox = await canAccessLulafiSubmissionInbox(
+			session.user.id,
+		);
 		const redirectPath = await getAuthenticatedHomePath(session.user.id);
 		const orgSlug =
 			typeof request.query === "object" &&
@@ -39,6 +43,7 @@ export async function accessRoutes(app: FastifyInstance) {
 				user: session.user,
 			},
 			roles,
+			canAccessLulafiInbox,
 			redirectPath,
 			organizationAccess,
 		};

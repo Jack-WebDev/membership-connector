@@ -48,7 +48,7 @@
 		"db:down": {
 			"cache": false
 		},
-		"seed": {
+		"db:seed": {
 			"cache": false
 		}
 	}

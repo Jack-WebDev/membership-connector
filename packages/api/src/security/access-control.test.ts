@@ -13,6 +13,7 @@ import {
 	createFixtureTracker,
 	createTestAnnouncement,
 	createTestApplication,
+	createTestLulafiSubmission,
 	createTestMembership,
 	createTestMembershipMember,
 	createTestOrganization,
@@ -44,6 +45,72 @@ describe("unauthorized and forbidden requests", () => {
 
 		await expect(
 			caller.membershipApplication.listMine({}),
+		).rejects.toMatchObject({
+			code: "FORBIDDEN",
+		});
+	});
+
+	it("allows a platform admin to list and view LulaFi submissions", async () => {
+		const userId = await createTestUser(tracker);
+		await addAccountRole(userId, "platform_admin");
+		const submissionId = await createTestLulafiSubmission(tracker);
+		const caller = appRouter.createCaller(fakeContext(userId));
+
+		const listResult = await caller.lulafiSubmissions.list({});
+		const detailResult = await caller.lulafiSubmissions.byId({ submissionId });
+
+		expect(listResult.items.some((item) => item.id === submissionId)).toBe(
+			true,
+		);
+		expect(detailResult.id).toBe(submissionId);
+	});
+
+	it("allows an organization creator to list and view LulaFi submissions", async () => {
+		const creatorUserId = await createTestUser(tracker);
+		await createTestOrganization(tracker, creatorUserId);
+		const submissionId = await createTestLulafiSubmission(tracker);
+		const caller = appRouter.createCaller(fakeContext(creatorUserId));
+
+		const listResult = await caller.lulafiSubmissions.list({});
+		const detailResult = await caller.lulafiSubmissions.byId({ submissionId });
+
+		expect(listResult.items.some((item) => item.id === submissionId)).toBe(
+			true,
+		);
+		expect(detailResult.id).toBe(submissionId);
+	});
+
+	it("allows an org admin who did not create an organization to access LulaFi submissions", async () => {
+		const creatorUserId = await createTestUser(tracker);
+		const orgAdminUserId = await createTestUser(tracker);
+		const { organizationId } = await createTestOrganization(
+			tracker,
+			creatorUserId,
+		);
+		await addOrganizationAdmin(organizationId, orgAdminUserId, "admin");
+		const submissionId = await createTestLulafiSubmission(tracker);
+		const caller = appRouter.createCaller(fakeContext(orgAdminUserId));
+
+		const listResult = await caller.lulafiSubmissions.list({});
+		const detailResult = await caller.lulafiSubmissions.byId({ submissionId });
+
+		expect(listResult.items.some((item) => item.id === submissionId)).toBe(
+			true,
+		);
+		expect(detailResult.id).toBe(submissionId);
+	});
+
+	it("rejects a normal member with no qualifying org creation from LulaFi submissions", async () => {
+		const userId = await createTestUser(tracker);
+		await addAccountRole(userId, "member");
+		const submissionId = await createTestLulafiSubmission(tracker);
+		const caller = appRouter.createCaller(fakeContext(userId));
+
+		await expect(caller.lulafiSubmissions.list({})).rejects.toMatchObject({
+			code: "FORBIDDEN",
+		});
+		await expect(
+			caller.lulafiSubmissions.byId({ submissionId }),
 		).rejects.toMatchObject({
 			code: "FORBIDDEN",
 		});

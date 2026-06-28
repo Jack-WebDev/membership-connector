@@ -139,12 +139,25 @@ export const organizationNavItems = (
 			badge: unreadNotifications > 0 ? unreadNotifications : undefined,
 		},
 		{
+			label: "LulaFi Submissions",
+			href: "/admin/submissions",
+			icon: <FileTextIcon className="size-4" />,
+		},
+		{
 			label: "Settings",
 			href: `${basePath}/settings`,
 			icon: <Building2Icon className="size-4" />,
 		},
 	];
 };
+
+export const platformNavItems = (): NavigationItem[] => [
+	{
+		label: "LulaFi Submissions",
+		href: "/admin/submissions",
+		icon: <FileTextIcon className="size-4" />,
+	},
+];
 
 export function withActiveItems(items: NavigationItem[], pathname: string) {
 	return items.map((item) => ({
